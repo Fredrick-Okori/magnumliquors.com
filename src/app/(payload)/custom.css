@@ -1,0 +1,491 @@
+/* ==========================================================================
+   MAGNUM LIQUORS — ULTRA-CLEAN MODERN MINIMALIST ADMIN THEME
+   ========================================================================== */
+
+:root {
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+/* Base Body Canvas */
+body, html {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* ==========================================================================
+   1. CLEAN MINIMALIST SIDEBAR NAVIGATION STYLING
+   ========================================================================== */
+aside.nav,
+.nav,
+.nav__wrap,
+[class*="nav_"],
+nav[class*="nav"] {
+  background-color: #111827 !important;
+  color: #f9fafb !important;
+  border-right: 1px solid #1f2937 !important;
+  box-shadow: none !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Brand Header */
+.nav__brand,
+.nav__header,
+[class*="brand_"],
+[class*="header_"] {
+  font-family: var(--font-serif) !important;
+  font-size: 1.6rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  letter-spacing: 0.04em !important;
+  padding: 1.5rem 1.25rem 1rem 1.25rem !important;
+  border-bottom: 1px solid #1f2937 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Group Container (Clean & Flat) */
+.nav__group,
+.nav-group,
+[class*="group_"] {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 0 1rem 0 !important;
+}
+
+/* Nav Group Category Titles (Clean & Muted) */
+.nav__group-title,
+.nav__label,
+.nav-group__title,
+.nav-group__toggle,
+[class*="group-title_"],
+[class*="label_"] {
+  color: #9ca3af !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+  padding: 0 1.25rem !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.4rem !important;
+  border-bottom: none !important;
+  opacity: 1 !important;
+  background: none !important;
+}
+
+/* Navigation Items & Links */
+.nav-link,
+.nav__link,
+a.nav-link,
+.nav-item a,
+[class*="nav-link_"],
+[class*="entity_"] {
+  color: #d1d5db !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  padding: 0.55rem 1rem !important;
+  margin: 0.15rem 0.75rem !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.15s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+  opacity: 1 !important;
+  text-decoration: none !important;
+  border: none !important;
+  font-family: var(--font-sans) !important;
+}
+
+.nav-link:hover,
+a.nav-link:hover,
+[class*="nav-link_"]:hover {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+  color: #ffffff !important;
+  transform: none !important;
+}
+
+.nav-link--active,
+.nav-link.active,
+a.nav-link.active,
+[class*="nav-link_"][class*="active"] {
+  background-color: #1f2937 !important;
+  color: #fbbf24 !important;
+  font-weight: 600 !important;
+  border-left: 3px solid #f59e0b !important;
+  box-shadow: none !important;
+}
+
+.nav-link svg,
+[class*="nav-link_"] svg {
+  color: #9ca3af !important;
+  stroke: #9ca3af !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  transition: color 0.15s ease !important;
+}
+
+.nav-link:hover svg,
+.nav-link--active svg {
+  color: #fbbf24 !important;
+  stroke: #fbbf24 !important;
+}
+
+/* ==========================================================================
+   2. OFFICIAL EXECUTIVE CELLAR INVOICE STYLING (FOR ORDERS COLLECTION)
+   ========================================================================== */
+
+/* Target Order Document Edit & Detailed View Forms */
+[class*="orders"] form,
+form[action*="orders"],
+.collection-orders .render-fields {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 1.25rem !important;
+  padding: 2.5rem !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.04) !important;
+  max-width: 960px !important;
+  margin: 1.5rem auto !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Invoice Header Decorator */
+[class*="orders"] form::before {
+  content: "MAGNUM FINE WINE & SPIRITS — OFFICIAL CELLAR INVOICE" !important;
+  display: block !important;
+  font-family: var(--font-serif) !important;
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  color: #b8860b !important;
+  letter-spacing: 0.1em !important;
+  border-bottom: 2.5px solid #b8860b !important;
+  padding-bottom: 0.85rem !important;
+  margin-bottom: 2rem !important;
+  text-transform: uppercase !important;
+}
+
+/* Order Status Badges in List & Detail View */
+[class*="cell-orderStatus"],
+[class*="cell-paymentStatus"],
+.pill,
+[class*="pill_"] {
+  border-radius: 9999px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 0.25rem 0.75rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  width: fit-content !important;
+  text-transform: capitalize !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Order Field Cards (Customer & Order Metadata) */
+.render-fields .field-type,
+[class*="field-type_"] {
+  background-color: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 0.85rem !important;
+  padding: 1.25rem !important;
+  margin-bottom: 1rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+
+.render-fields .field-label,
+[class*="field-label_"] {
+  color: #374151 !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  margin-bottom: 0.5rem !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Order Items Array Table — Invoice Line Items List */
+.array-field,
+[class*="array-field_"] {
+  background-color: #ffffff !important;
+  border: 1.5px solid #111827 !important;
+  border-radius: 0.9rem !important;
+  padding: 1.25rem !important;
+  margin-top: 1.5rem !important;
+}
+
+.array-field__header,
+[class*="array-field__header"] {
+  background-color: #111827 !important;
+  color: #fbbf24 !important;
+  padding: 0.85rem 1.1rem !important;
+  font-size: 0.825rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+  border-radius: 0.6rem 0.6rem 0 0 !important;
+  font-family: var(--font-sans) !important;
+}
+
+.array-field__row,
+[class*="array-field__row"] {
+  background-color: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.75rem !important;
+  padding: 1rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Total Amounts Styling */
+[class*="totalAmount"] input {
+  font-family: monospace !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #b8860b !important;
+  background-color: #fffbe6 !important;
+  border: 1.5px solid #f59e0b !important;
+}
+
+/* ==========================================================================
+   3. INPUT FIELDS & TEXTAREAS STYLING
+   ========================================================================== */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+.text-input,
+.textarea-input,
+.field-type input,
+.field-type textarea,
+[class*="input_"] {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #111827 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  border-radius: 0.5rem !important;
+  padding: 0.55rem 0.85rem !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  font-family: var(--font-sans) !important;
+}
+
+input:hover,
+textarea:hover {
+  border-color: #9ca3af !important;
+}
+
+input:focus,
+textarea:focus,
+.text-input:focus,
+.textarea-input:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+  outline: none !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   4. SELECT DROPDOWNS STYLING
+   ========================================================================== */
+select,
+.react-select__control,
+.select-input,
+[class*="react-select__control"] {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.5rem !important;
+  color: #111827 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.15s ease !important;
+  font-family: var(--font-sans) !important;
+}
+
+.react-select__control--is-focused,
+select:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+}
+
+.react-select__menu,
+[class*="react-select__menu"] {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden !important;
+  font-family: var(--font-sans) !important;
+}
+
+.react-select__option,
+[class*="react-select__option"] {
+  color: #111827 !important;
+  padding: 0.5rem 0.85rem !important;
+  font-size: 0.875rem !important;
+  cursor: pointer !important;
+  font-family: var(--font-sans) !important;
+}
+
+.react-select__option--is-focused,
+.react-select__option:hover {
+  background-color: #fffbe6 !important;
+  color: #b8860b !important;
+}
+
+.react-select__option--is-selected {
+  background-color: #111827 !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   5. CHECKBOXES & TOGGLES STYLING
+   ========================================================================== */
+input[type="checkbox"],
+.checkbox-input,
+.checkbox__input,
+[class*="checkbox"] input {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.35rem !important;
+  background-color: #ffffff !important;
+  cursor: pointer !important;
+  display: inline-grid !important;
+  place-content: center !important;
+  transition: all 0.15s ease !important;
+  margin-right: 0.5rem !important;
+}
+
+input[type="checkbox"]:hover {
+  border-color: #f59e0b !important;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #111827 !important;
+  border-color: #111827 !important;
+}
+
+input[type="checkbox"]:checked::before {
+  content: "✓" !important;
+  color: #fbbf24 !important;
+  font-size: 0.75rem !important;
+  font-weight: 900 !important;
+}
+
+/* ==========================================================================
+   6. UPLOAD FIELD & DROPZONE STYLING
+   ========================================================================== */
+.file-field,
+.file-dropzone,
+.dropzone,
+.upload-field,
+.file-uploader,
+[class*="dropzone_"],
+[class*="file-field_"] {
+  background-color: #f9fafb !important;
+  border: 1.5px dashed #d1d5db !important;
+  border-radius: 0.75rem !important;
+  padding: 1.75rem 1.25rem !important;
+  text-align: center !important;
+  transition: all 0.15s ease-in-out !important;
+  cursor: pointer !important;
+  font-family: var(--font-sans) !important;
+}
+
+.file-dropzone:hover,
+.dropzone:hover,
+[class*="dropzone_"]:hover {
+  border-color: #f59e0b !important;
+  background-color: #fffbe6 !important;
+}
+
+.file-field__drag-message,
+.dropzone p {
+  color: #111827 !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+}
+
+/* ==========================================================================
+   7. SLEEK BUTTONS STYLING
+   ========================================================================== */
+.btn,
+button.btn,
+a.btn,
+[class*="btn_"] {
+  border-radius: 0.5rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  padding: 0.45rem 0.95rem !important;
+  height: auto !important;
+  min-height: unset !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+  font-family: var(--font-sans) !important;
+}
+
+.btn--style-primary,
+button[type="submit"],
+[class*="btn--style-primary"] {
+  background-color: #111827 !important;
+  color: #ffffff !important;
+  border: 1px solid #111827 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.btn--style-primary:hover,
+button[type="submit"]:hover,
+[class*="btn--style-primary"]:hover {
+  background-color: #f59e0b !important;
+  color: #111827 !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25) !important;
+}
+
+.btn--style-secondary,
+[class*="btn--style-secondary"] {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #374151 !important;
+}
+
+.btn--style-secondary:hover,
+[class*="btn--style-secondary"]:hover {
+  border-color: #f59e0b !important;
+  color: #b8860b !important;
+  background-color: #fffbe6 !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}

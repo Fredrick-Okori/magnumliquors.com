@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0c0a08;
+  --foreground: #FAF7F2;
+  --bg-card: #181512;
+  --border-color: rgba(255, 255, 255, 0.12);
+  --accent-gold: #d4af37;
+  --nav-bg: #12100d;
+}
+
+[data-theme="dark"] {
+  --background: #0c0a08;
+  --foreground: #FAF7F2;
+  --bg-card: #181512;
+  --border-color: rgba(255, 255, 255, 0.12);
+  --accent-gold: #d4af37;
+  --nav-bg: #12100d;
+}
+
+[data-theme="light"] {
+  --background: #f4f4f3;
+  --foreground: #171a14;
+  --bg-card: #ffffff;
+  --border-color: rgba(0, 0, 0, 0.12);
+  --accent-gold: #b8860b;
+  --nav-bg: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-dashboard: var(--font-afacad-flux), "Afacad Flux", var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.font-serif {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+}
+
+.font-dashboard {
+  font-family: var(--font-afacad-flux), "Afacad Flux", var(--font-plus-jakarta), system-ui, sans-serif;
+}
+
+button, a { cursor: pointer; }
+
+/* Custom Luxury Gold Gradient & Animations */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #FFF5DF 0%, #D4AF37 45%, #C59B27 75%, #E6C280 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%);
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.08); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s infinite ease-in-out;
+}
