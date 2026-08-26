@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans, Afacad_Flux } from "next/font/google";
 import { SiteChrome } from "@/components/SiteChrome";
 import "./globals.css";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`h-full antialiased ${cormorant.variable} ${plusJakarta.variable} ${afacadFlux.variable}`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        <SpeedInsights />
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
