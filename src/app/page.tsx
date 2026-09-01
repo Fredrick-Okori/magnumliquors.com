@@ -19,6 +19,7 @@ import { Hero } from "@/components/Hero";
 import { BrandsShelf } from "@/components/BrandsShelf";
 import { useCart } from "@/components/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useTheme } from "@/context/ThemeContext";
 import { products, Product, productHref } from "@/data/products";
 
 const categories = [
@@ -35,6 +36,9 @@ const categories = [
 ];
 
 export default function Home() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const [activeCategory, setActiveCategory] = useState("All bottles");
   const [query, setQuery] = useState("");
   const [addedProduct, setAddedProduct] = useState<string | null>(null);
@@ -87,12 +91,12 @@ export default function Home() {
   }, [productList, activeCategory, query]);
 
   return (
-    <div className="min-h-screen transition-colors duration-400">
+    <div className="min-h-screen transition-colors duration-300">
       <main>
         {/* Sleek Hero Component */}
         <Hero />
 
-        {/* Redesigned Products Section matching Reference UI */}
+        {/* Redesigned Products Section matching Reference UI (Dark/Light compatible) */}
         <section id="shop" className="mx-auto max-w-7xl px-5 py-14 lg:px-10 lg:py-20">
           
           {/* Top Category Pills Bar & Controls */}
@@ -109,11 +113,24 @@ export default function Home() {
                     onClick={() => setActiveCategory(cat.name)}
                     className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                       isActive
-                        ? "bg-neutral-900 text-white shadow-sm border border-neutral-900"
-                        : "bg-white text-neutral-600 border border-neutral-200/80 hover:bg-neutral-100 hover:text-neutral-900 shadow-xs"
+                        ? isDark
+                          ? "bg-[#b8860b] text-white shadow-sm border border-[#b8860b]"
+                          : "bg-neutral-900 text-white shadow-sm border border-neutral-900"
+                        : isDark
+                          ? "bg-[#181512] text-neutral-300 border border-white/10 hover:bg-[#24201c] hover:text-white shadow-xs"
+                          : "bg-white text-neutral-600 border border-neutral-200/80 hover:bg-neutral-100 hover:text-neutral-900 shadow-xs"
                     }`}
                   >
-                    <Icon size={14} className={isActive ? "text-white" : "text-neutral-400"} />
+                    <Icon
+                      size={14}
+                      className={
+                        isActive
+                          ? "text-white"
+                          : isDark
+                          ? "text-[#b8860b]"
+                          : "text-neutral-400"
+                      }
+                    />
                     <span>{cat.name}</span>
                   </button>
                 );
@@ -123,22 +140,33 @@ export default function Home() {
             {/* Right Side Search & Sort Bar */}
             <div className="flex items-center gap-3 self-end lg:self-auto">
               <div className="relative flex items-center">
-                <Search size={14} className="absolute left-3.5 text-neutral-400" />
+                <Search
+                  size={14}
+                  className={`absolute left-3.5 ${isDark ? "text-neutral-400" : "text-neutral-400"}`}
+                />
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search bottles..."
-                  className="h-10 w-36 sm:w-48 rounded-full border border-neutral-200/80 bg-white pl-9 pr-4 text-xs text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition shadow-xs"
+                  className={`h-10 w-36 sm:w-48 rounded-full border pl-9 pr-4 text-xs outline-none transition shadow-xs ${
+                    isDark
+                      ? "border-white/15 bg-[#181512] text-white placeholder:text-neutral-400 focus:border-[#b8860b] focus:ring-1 focus:ring-[#b8860b]"
+                      : "border-neutral-200/80 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+                  }`}
                 />
               </div>
 
               <button
-                className="flex h-10 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white px-4 text-xs font-medium text-neutral-700 shadow-xs hover:bg-neutral-50 transition"
+                className={`flex h-10 items-center gap-1.5 rounded-full border px-4 text-xs font-medium shadow-xs transition ${
+                  isDark
+                    ? "border-white/15 bg-[#181512] text-neutral-300 hover:bg-[#24201c] hover:text-white"
+                    : "border-neutral-200/80 bg-white text-neutral-700 hover:bg-neutral-50"
+                }`}
               >
-                <span className="text-neutral-400">Sort by:</span>
-                <span className="font-semibold text-neutral-900">Featured</span>
-                <ChevronDown size={14} className="text-neutral-400" />
+                <span className={isDark ? "text-neutral-400" : "text-neutral-400"}>Sort by:</span>
+                <span className={`font-semibold ${isDark ? "text-white" : "text-neutral-900"}`}>Featured</span>
+                <ChevronDown size={14} className={isDark ? "text-neutral-400" : "text-neutral-400"} />
               </button>
             </div>
 
@@ -149,18 +177,30 @@ export default function Home() {
             {visibleProducts.map((product) => (
               <article
                 key={product.id}
-                className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className={`group relative flex flex-col justify-between rounded-3xl border p-4 transition-all duration-300 hover:-translate-y-1 ${
+                  isDark
+                    ? "border-white/10 bg-[#14120f] shadow-[0_4px_25px_rgba(0,0,0,0.5)] hover:border-[#b8860b]/50 hover:shadow-[0_8px_30px_rgba(0,0,0,0.8)]"
+                    : "border-neutral-200/70 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-xl"
+                }`}
               >
                 {/* Product Image Container Stretched Edge-to-Edge */}
                 <Link
                   href={productHref(product)}
-                  className="relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]"
+                  className={`relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl ${
+                    isDark ? "bg-[#0c0a08]" : "bg-[#fafafa]"
+                  }`}
                 >
                   {/* Floating Upper Contents Overlay: Badge & Circular Arrow Button */}
                   <div className="absolute left-3.5 top-3.5 right-3.5 z-10 flex items-center justify-between pointer-events-none">
                     {product.badge ? (
-                      <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f3e5b8]/90 bg-[#fffcf0]/90 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-[#b8860b] shadow-xs">
-                        <CheckCircle2 size={13} className="text-[#d4af37]" />
+                      <div
+                        className={`inline-flex items-center gap-1.5 rounded-full border backdrop-blur-md px-3 py-1 text-[11px] font-semibold shadow-xs ${
+                          isDark
+                            ? "border-[#b8860b]/40 bg-[#1c1813]/90 text-[#e5c875]"
+                            : "border-[#f3e5b8]/90 bg-[#fffcf0]/90 text-[#b8860b]"
+                        }`}
+                      >
+                        <CheckCircle2 size={13} className={isDark ? "text-[#e5c875]" : "text-[#d4af37]"} />
                         <span>{product.badge}</span>
                       </div>
                     ) : (
@@ -168,7 +208,11 @@ export default function Home() {
                     )}
 
                     <div
-                      className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-neutral-800 shadow-sm transition-all duration-300 group-hover:bg-neutral-900 group-hover:text-white"
+                      className={`pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-md shadow-sm transition-all duration-300 ${
+                        isDark
+                          ? "bg-[#181512]/90 text-neutral-200 group-hover:bg-[#b8860b] group-hover:text-white"
+                          : "bg-white/80 text-neutral-800 group-hover:bg-neutral-900 group-hover:text-white"
+                      }`}
                     >
                       <ArrowUpRight size={16} />
                     </div>
@@ -185,16 +229,26 @@ export default function Home() {
                 {/* Bottom Row: Producer, Title & Price */}
                 <div className="flex items-end justify-between gap-3 pt-3 px-2 pb-1 z-10">
                   <Link href={productHref(product)} className="group/title">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">
+                    <p className={`text-[11px] font-medium uppercase tracking-wider ${isDark ? "text-neutral-400" : "text-neutral-400"}`}>
                       {product.producer} · {product.category}
                     </p>
-                    <h3 className="mt-0.5 font-serif text-lg font-bold tracking-tight text-neutral-900 group-hover/title:text-[#b8860b] transition">
+                    <h3
+                      className={`mt-0.5 font-serif text-lg font-bold tracking-tight transition ${
+                        isDark
+                          ? "text-white group-hover/title:text-[#e5c875]"
+                          : "text-neutral-900 group-hover/title:text-[#b8860b]"
+                      }`}
+                    >
                       {product.name}
                     </h3>
                   </Link>
 
                   <div className="flex flex-col items-end">
-                    <span className="font-sans text-sm sm:text-base font-bold tracking-tight text-neutral-900">
+                    <span
+                      className={`font-sans text-sm sm:text-base font-bold tracking-tight ${
+                        isDark ? "text-[#FAF7F2]" : "text-neutral-900"
+                      }`}
+                    >
                       {formatAmount(product.numericPrice)}
                     </span>
                     <button
@@ -203,7 +257,11 @@ export default function Home() {
                         handleAddToCart(product);
                         openCart();
                       }}
-                      className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-neutral-600 hover:text-neutral-900 transition"
+                      className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold transition ${
+                        isDark
+                          ? "text-[#e5c875] hover:text-[#fff5df]"
+                          : "text-neutral-600 hover:text-neutral-900"
+                      }`}
                     >
                       <span>{addedProduct === product.id ? "Added ✓" : "+ Add"}</span>
                     </button>
@@ -216,7 +274,9 @@ export default function Home() {
 
           {visibleProducts.length === 0 && (
             <div className="py-20 text-center">
-              <p className="font-serif text-2xl text-neutral-500">No bottles found matching your search.</p>
+              <p className={`font-serif text-2xl ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                No bottles found matching your search.
+              </p>
             </div>
           )}
         </section>
@@ -225,17 +285,36 @@ export default function Home() {
         <BrandsShelf />
 
         {/* Minimalist Story Section */}
-        <section id="about" className="border-t border-neutral-200/80 bg-white px-5 py-16 lg:px-10 lg:py-24 text-neutral-900">
+        <section
+          id="about"
+          className={`border-t px-5 py-16 lg:px-10 lg:py-24 transition-colors duration-300 ${
+            isDark
+              ? "border-white/10 bg-[#0e0c0a] text-[#FAF7F2]"
+              : "border-neutral-200/80 bg-white text-neutral-900"
+          }`}
+        >
           <div className="mx-auto grid max-w-7xl items-center gap-8 md:grid-cols-[0.7fr_1.3fr]">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">
               More Than A Liquor Store
             </p>
             <div className="flex flex-col justify-between gap-7 md:flex-row md:items-end">
-              <h2 className="max-w-2xl font-serif text-3xl leading-tight tracking-tight text-neutral-900 lg:text-5xl">
+              <h2
+                className={`max-w-2xl font-serif text-3xl leading-tight tracking-tight lg:text-5xl ${
+                  isDark ? "text-white" : "text-neutral-900"
+                }`}
+              >
                 Good bottles have a story.<br />
-                <i className="font-normal italic text-neutral-600">We&apos;re here for all of them.</i>
+                <i className={`font-normal italic ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
+                  We&apos;re here for all of them.
+                </i>
               </h2>
-              <button className="flex w-fit items-center gap-3 text-xs font-semibold uppercase tracking-widest text-neutral-900 underline decoration-neutral-900 decoration-2 underline-offset-8 transition hover:text-[#b8860b]">
+              <button
+                className={`flex w-fit items-center gap-3 text-xs font-semibold uppercase tracking-widest underline decoration-2 underline-offset-8 transition hover:text-[#b8860b] ${
+                  isDark
+                    ? "text-white decoration-white"
+                    : "text-neutral-900 decoration-neutral-900"
+                }`}
+              >
                 Meet Magnum <ArrowRight size={15} />
               </button>
             </div>

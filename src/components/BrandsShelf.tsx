@@ -1,6 +1,7 @@
 "use client";
 
 import { ShieldCheck } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 interface Brand {
   name: string;
@@ -23,18 +24,37 @@ const brandLogos: Brand[] = [
 ];
 
 export function BrandsShelf() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   return (
-    <section className="relative z-20 border-t border-neutral-200/80 bg-white py-16 lg:py-24 text-neutral-900 select-none">
+    <section
+      className={`relative z-20 border-t py-16 lg:py-24 select-none transition-colors duration-300 ${
+        isDark
+          ? "border-white/10 bg-[#0c0a08] text-[#FAF7F2]"
+          : "border-neutral-200/80 bg-white text-neutral-900"
+      }`}
+    >
       <div className="mx-auto max-w-7xl px-6 lg:px-12 space-y-12">
         
         {/* Subtitle Badge Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#f3e5b8] bg-[#fffcf0] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#b8860b]">
-            <ShieldCheck size={13} className="text-[#d4af37]" />
+          <div
+            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] ${
+              isDark
+                ? "border-[#b8860b]/40 bg-[#1c1813] text-[#e5c875]"
+                : "border-[#f3e5b8] bg-[#fffcf0] text-[#b8860b]"
+            }`}
+          >
+            <ShieldCheck size={13} className={isDark ? "text-[#e5c875]" : "text-[#d4af37]"} />
             <span>Official Distillery Partners</span>
           </div>
 
-          <h2 className="font-serif text-2xl sm:text-3xl font-light tracking-tight text-neutral-900">
+          <h2
+            className={`font-serif text-2xl sm:text-3xl font-light tracking-tight ${
+              isDark ? "text-white" : "text-neutral-900"
+            }`}
+          >
             Featured Brands & Distilleries
           </h2>
         </div>
@@ -44,14 +64,18 @@ export function BrandsShelf() {
           {brandLogos.map((brand) => (
             <div
               key={brand.name}
-              className="group flex h-36 sm:h-44 w-full max-w-[240px] items-center justify-center rounded-2xl p-6 transition-all duration-300  hover:scale-105"
+              className={`group flex h-36 sm:h-44 w-full max-w-[240px] items-center justify-center rounded-2xl p-6 transition-all duration-300 hover:scale-105 ${
+                isDark
+                  ? "bg-[#14120f]/60 hover:bg-[#1a1713] border border-white/5"
+                  : "bg-neutral-50/70 hover:bg-neutral-100/80 border border-neutral-100"
+              }`}
             >
               {/* Large Full-Color SVG Logo */}
               <div className="relative flex h-28 sm:h-36 w-full items-center justify-center">
                 <img
                   src={brand.logo}
                   alt={brand.name}
-                  className="max-h-24 sm:max-h-28 max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                  className="max-h-24 sm:max-h-28 max-w-full object-contain transition-transform duration-300 group-hover:scale-105 brightness-100 contrast-105"
                 />
               </div>
             </div>
