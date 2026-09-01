@@ -3,6 +3,7 @@ export type Product = {
   producer: string;
   category: string;
   price: string;
+  numericPrice?: number;
   oldPrice?: string;
   badge?: string;
   image: string;
@@ -12,4 +13,5 @@ export type Product = {
 export type CategoryProduct = Omit<Product, "category" | "tone"> & {
   category?: string;
   tone?: string;
+  numericPrice?: number;
 };

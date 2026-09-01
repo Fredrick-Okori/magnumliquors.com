@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
   Beer,
@@ -20,15 +21,19 @@ import {
 } from "lucide-react";
 import { useCart } from "@/components/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { products, Product } from "@/data/products";
+import { Product, productHref } from "@/data/products";
 
 const categories = [
   { name: "All", icon: LayoutGrid },
+  { name: "Whiskey", icon: GlassWater },
+  { name: "Rum", icon: Flame },
+  { name: "Vodka", icon: Sparkles },
+  { name: "Liqueur", icon: Wine },
+  { name: "Gin", icon: Beer },
+  { name: "Tequila", icon: Flame },
+  { name: "Brandy", icon: GlassWater },
+  { name: "Champagne", icon: Sparkles },
   { name: "Wine", icon: Wine },
-  { name: "Spirits", icon: Flame },
-  { name: "Bourbon", icon: GlassWater },
-  { name: "Beer", icon: Beer },
-  { name: "Non-alcoholic", icon: Sparkles },
 ];
 
 const origins = [
@@ -40,8 +45,11 @@ const origins = [
   "Provence-Alpes-Côte d'Azur, France",
 ];
 
-export default function DiscoverPage() {
-  const [activeCategory, setActiveCategory] = useState("All");
+function DiscoverContent() {
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+
+  const [activeCategory, setActiveCategory] = useState(categoryParam || "All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<"featured" | "price-asc" | "price-desc" | "rating">("featured");
 
@@ -55,17 +63,38 @@ export default function DiscoverPage() {
   const { addToCart, openCart } = useCart();
   const { formatAmount } = useCurrency();
   const [addedProduct, setAddedProduct] = useState<string | null>(null);
-  const [productList, setProductList] = useState<Product[]>(products);
+  const [productList, setProductList] = useState<Product[]>([]);
+
+  useEffect(() => {
+    if (categoryParam) {
+      setActiveCategory(categoryParam);
+    }
+  }, [categoryParam]);
 
   useEffect(() => {
     fetch("/api/store-products")
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setProductList(data);
-        }
+        const apiList = Array.isArray(data) ? data : [];
+        let localProducts: Product[] = [];
+        try {
+          localProducts = JSON.parse(localStorage.getItem("magnum_added_products") || "[]");
+        } catch (e) {}
+
+        let deletedIds = new Set<string>();
+        try {
+          const raw = localStorage.getItem("magnum_deleted_product_ids");
+          deletedIds = new Set(raw ? JSON.parse(raw) : []);
+        } catch (e) {}
+
+        const combined = [
+          ...localProducts,
+          ...apiList.filter((ap) => !localProducts.some((lp) => String(lp.id) === String(ap.id))),
+        ].filter((p) => !deletedIds.has(String(p.id)));
+
+        setProductList(combined);
       })
-      .catch((err) => console.warn("Failed to load Payload products:", err));
+      .catch((err) => console.warn("Failed to load store products:", err));
   }, []);
 
   const handleAddToCart = (product: Product) => {
@@ -106,7 +135,7 @@ export default function DiscoverPage() {
 
     // Top Category Pills Filter
     if (activeCategory !== "All") {
-      result = result.filter((p) => p.category === activeCategory);
+      result = result.filter((p) => p.category.toLowerCase() === activeCategory.toLowerCase());
     }
 
     // Search Query Filter
@@ -120,21 +149,12 @@ export default function DiscoverPage() {
       );
     }
 
-    // Sidebar Category Checkboxes Filter
+    // Sidebar Category Filter
     if (selectedCategories.length > 0) {
-      result = result.filter((p) => selectedCategories.includes(p.category));
+      result = result.filter((p) => selectedCategories.some((sc) => sc.toLowerCase() === p.category.toLowerCase()));
     }
 
-    // Sidebar Price Tier Filter (numericPrice in USD equivalent)
-    if (priceTier === "under-35") {
-      result = result.filter((p) => p.numericPrice < 35);
-    } else if (priceTier === "35-100") {
-      result = result.filter((p) => p.numericPrice >= 35 && p.numericPrice <= 100);
-    } else if (priceTier === "100-plus") {
-      result = result.filter((p) => p.numericPrice > 100);
-    }
-
-    // Sidebar Origins Filter
+    // Origin Filter
     if (selectedOrigins.length > 0) {
       result = result.filter((p) => selectedOrigins.includes(p.origin));
     }
@@ -144,239 +164,195 @@ export default function DiscoverPage() {
       result = result.filter((p) => p.inStock);
     }
 
-    // Sort Logic
+    // Price Tier Filter
+    if (priceTier !== "all") {
+      result = result.filter((p) => {
+        if (priceTier === "under-50") return p.numericPrice < 50;
+        if (priceTier === "50-100") return p.numericPrice >= 50 && p.numericPrice <= 100;
+        if (priceTier === "100-200") return p.numericPrice > 100 && p.numericPrice <= 200;
+        if (priceTier === "above-200") return p.numericPrice > 200;
+        return true;
+      });
+    }
+
+    // Sorting
     if (sortOption === "price-asc") {
       result.sort((a, b) => a.numericPrice - b.numericPrice);
     } else if (sortOption === "price-desc") {
       result.sort((a, b) => b.numericPrice - a.numericPrice);
     } else if (sortOption === "rating") {
-      result.sort((a, b) => b.rating.localeCompare(a.rating));
+      result.sort((a, b) => (b.rating ? 1 : 0) - (a.rating ? 1 : 0));
     }
 
     return result;
   }, [
+    productList,
     activeCategory,
     searchQuery,
     selectedCategories,
-    priceTier,
     selectedOrigins,
     inStockOnly,
+    priceTier,
     sortOption,
   ]);
 
   return (
-    <div className="min-h-screen bg-[#f4f4f3] transition-colors duration-400 text-neutral-900 pb-24 select-none">
+    <div className="min-h-screen bg-[#faf8f5] text-neutral-900 selection:bg-[#d4af37] selection:text-neutral-950">
       
-      {/* Breadcrumb Header Strip */}
-      <div className="border-b border-neutral-200/80 bg-white/60 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-10 text-xs text-neutral-500">
-          <div className="flex items-center gap-2">
-            <Link href="/" className="hover:text-neutral-900 transition">
-              Home
-            </Link>
-            <ChevronRight size={13} className="text-neutral-400" />
-            <span className="font-medium text-neutral-900">Discover Collection</span>
-          </div>
-
-          <span className="text-neutral-500 font-mono text-[11px]">
-            {filteredProducts.length} {filteredProducts.length === 1 ? "bottle" : "bottles"} available
-          </span>
-        </div>
-      </div>
-
-      {/* Page Title & Hero Header */}
-      <header className="border-b border-neutral-200/80 bg-white px-5 py-10 lg:px-10 lg:py-14">
-        <div className="mx-auto max-w-7xl space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#b8860b]">
-            Full Cellar Allocation
+      {/* Header Banner */}
+      <section className="relative border-b border-neutral-200/80 bg-white px-5 py-12 lg:px-10 lg:py-16">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">
+            The Master Collection
           </p>
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-neutral-900">
-            Discover Our Collection
+          <h1 className="mt-2 font-serif text-3xl tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl">
+            Discover Fine Spirits & Estate Wines
           </h1>
-          <p className="text-sm font-light text-neutral-600 max-w-2xl leading-relaxed">
-            Filter through our complete catalog of single malts, estate wines, craft bourbons, and artisanal spirits. Delivered directly in climate-controlled packaging.
+          <p className="mt-3 max-w-2xl text-xs sm:text-sm font-light text-neutral-600 leading-relaxed">
+            Explore rare vintage allocations, small batch single barrels, and prestige reserves curated from the world&apos;s most distinguished vineyards and distilleries.
           </p>
-        </div>
-      </header>
 
-      <main className="mx-auto max-w-7xl px-5 py-8 lg:px-10 lg:py-12">
-        
-        {/* Top-Level Filter & Controls Bar */}
-        <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between border-b border-neutral-200/80 pb-6">
-          
-          {/* Horizontal Category Selector Pills */}
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
-              const isActive = activeCategory === cat.name;
-              return (
-                <button
-                  key={cat.name}
-                  onClick={() => setActiveCategory(cat.name)}
-                  className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-medium whitespace-nowrap transition-all duration-200 ${
-                    isActive
-                      ? "bg-neutral-900 text-white shadow-sm border border-neutral-900"
-                      : "bg-white text-neutral-600 border border-neutral-200/80 hover:bg-neutral-100 hover:text-neutral-900 shadow-xs"
-                  }`}
-                >
-                  <Icon size={14} className={isActive ? "text-white" : "text-neutral-400"} />
-                  <span>{cat.name}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right Controls: Search, Sort & Mobile Filter Trigger */}
-          <div className="flex flex-wrap items-center gap-3">
-            
-            {/* Mobile Filter Toggle Button */}
-            <button
-              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-              className="lg:hidden flex h-10 items-center gap-2 rounded-full border border-neutral-200/80 bg-white px-4 text-xs font-semibold text-neutral-800 shadow-xs"
-            >
-              <SlidersHorizontal size={14} className="text-[#b8860b]" />
-              <span>Filters</span>
-            </button>
-
-            {/* Search Input Box */}
-            <div className="relative flex items-center flex-1 sm:flex-initial">
-              <Search size={14} className="absolute left-3.5 text-neutral-400" />
+          {/* Search Bar */}
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+              />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by bottle, brand or origin..."
-                className="h-10 w-full sm:w-64 rounded-full border border-neutral-200/80 bg-white pl-9 pr-4 text-xs text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition shadow-xs"
+                placeholder="Search by bottle name, distillery, or region (e.g. Jalisco, Speyside)..."
+                className="w-full rounded-full border border-neutral-200/80 bg-[#faf8f5] pl-11 pr-4 py-3.5 text-xs text-neutral-900 placeholder:text-neutral-600 outline-none transition focus:border-[#b8860b] focus:bg-white"
               />
             </div>
-
-            {/* Sort Dropdown Selector */}
-            <div className="relative inline-flex items-center">
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value as any)}
-                aria-label="Sort products"
-                className="h-10 appearance-none rounded-full border border-neutral-200/80 bg-white pl-4 pr-9 text-xs font-semibold text-neutral-900 outline-none focus:border-neutral-900 shadow-xs cursor-pointer"
-              >
-                <option value="featured">Featured Allocation</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="rating">Top Rated</option>
-              </select>
-              <ChevronDown size={14} className="pointer-events-none absolute right-3 text-neutral-400" />
-            </div>
-
+            
+            <button
+              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+              className="lg:hidden flex items-center justify-center gap-2 rounded-full border border-neutral-200/80 bg-white px-5 py-3 text-xs font-semibold text-neutral-800 shadow-xs"
+            >
+              <SlidersHorizontal size={14} /> Filters
+            </button>
           </div>
+        </div>
+      </section>
 
+      {/* Main Content Area */}
+      <main className="mx-auto max-w-7xl px-5 py-10 lg:px-10">
+        
+        {/* Horizontal Category Carousel */}
+        <div className="mb-10 flex items-center gap-3 overflow-x-auto pb-3 scrollbar-none">
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = activeCategory.toLowerCase() === cat.name.toLowerCase();
+            return (
+              <button
+                key={cat.name}
+                onClick={() => setActiveCategory(cat.name)}
+                className={`flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold transition-all ${
+                  isActive
+                    ? "bg-[#b8860b] text-white shadow-md"
+                    : "border border-neutral-200/80 bg-white text-neutral-700 hover:border-neutral-400 hover:bg-[#faf8f5]"
+                }`}
+              >
+                <Icon size={14} className={isActive ? "text-white" : "text-[#b8860b]"} />
+                <span>{cat.name}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Layout Grid: Left Sidebar Filters + Right Product Catalog */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* Content Layout Grid (Sidebar + Product Catalog) */}
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[260px_1fr]">
           
-          {/* Left Sidebar Filter Section */}
-          <aside
-            className={`${
-              mobileFilterOpen ? "block" : "hidden"
-            } lg:block lg:col-span-3 space-y-6 rounded-3xl border border-neutral-200/80 bg-white p-6 shadow-xs h-fit sticky top-36`}
-          >
-            <div className="flex items-center justify-between border-b border-neutral-200/80 pb-4">
-              <div className="flex items-center gap-2">
-                <Filter size={16} className="text-[#b8860b]" />
-                <h3 className="font-serif text-xl font-light text-neutral-900">
-                  Refine Cellar
-                </h3>
-              </div>
-
-              <button
-                onClick={clearAllFilters}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-500 hover:text-neutral-900 transition"
-              >
-                <RotateCcw size={12} /> Reset
-              </button>
+          {/* LEFT SIDEBAR FILTERS (Desktop) */}
+          <aside className="hidden lg:block space-y-8">
+            <div className="flex items-center justify-between border-b border-neutral-200/80 pb-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-900">
+                Filters
+              </span>
+              {(selectedCategories.length > 0 || selectedOrigins.length > 0 || priceTier !== "all" || inStockOnly) && (
+                <button
+                  onClick={clearAllFilters}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-[#b8860b] hover:underline"
+                >
+                  <RotateCcw size={11} /> Reset
+                </button>
+              )}
             </div>
 
-            {/* Filter Group 1: Product Categories */}
+            {/* Category Filter */}
             <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-900">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900">
                 Categories
-              </h4>
-              <div className="space-y-2 text-xs text-neutral-600 font-light">
-                {["Spirits", "Wine", "Bourbon", "Beer", "Non-alcoholic"].map((cat) => (
-                  <label key={cat} className="flex items-center gap-2.5 cursor-pointer hover:text-neutral-900 transition">
+              </h3>
+              <div className="space-y-2">
+                {categories
+                  .filter((c) => c.name !== "All")
+                  .map((cat) => (
+                    <label
+                      key={cat.name}
+                      className="flex items-center gap-3 text-xs text-neutral-700 hover:text-neutral-900 cursor-pointer select-none"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(cat.name)}
+                        onChange={() => handleCategoryToggle(cat.name)}
+                        className="h-4 w-4 rounded border-neutral-300 text-[#b8860b] focus:ring-[#b8860b]"
+                      />
+                      <span>{cat.name}</span>
+                    </label>
+                  ))}
+              </div>
+            </div>
+
+            {/* Price Tier Filter */}
+            <div className="space-y-3 border-t border-neutral-200/80 pt-6">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900">
+                Price Range
+              </h3>
+              <div className="space-y-2 text-xs text-neutral-700">
+                {[
+                  { id: "all", label: "All Prices" },
+                  { id: "under-50", label: "Under UGX 185,000" },
+                  { id: "50-100", label: "UGX 185,000 - 370,000" },
+                  { id: "100-200", label: "UGX 370,000 - 740,000" },
+                  { id: "above-200", label: "UGX 740,000 & Above" },
+                ].map((tier) => (
+                  <label
+                    key={tier.id}
+                    className="flex items-center gap-3 cursor-pointer select-none hover:text-neutral-900"
+                  >
                     <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(cat)}
-                      onChange={() => handleCategoryToggle(cat)}
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+                      type="radio"
+                      name="priceTier"
+                      checked={priceTier === tier.id}
+                      onChange={() => setPriceTier(tier.id)}
+                      className="h-4 w-4 text-[#b8860b] focus:ring-[#b8860b]"
                     />
-                    <span>{cat}</span>
+                    <span>{tier.label}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Filter Group 2: Price Range */}
-            <div className="space-y-3 border-t border-neutral-200/80 pt-5">
-              <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-900">
-                Price Tiers
-              </h4>
-              <div className="space-y-2 text-xs text-neutral-600 font-light">
-                <label className="flex items-center gap-2.5 cursor-pointer hover:text-neutral-900 transition">
-                  <input
-                    type="radio"
-                    name="priceTier"
-                    checked={priceTier === "all"}
-                    onChange={() => setPriceTier("all")}
-                    className="h-4 w-4 text-neutral-900 focus:ring-neutral-900"
-                  />
-                  <span>All Prices</span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer hover:text-neutral-900 transition">
-                  <input
-                    type="radio"
-                    name="priceTier"
-                    checked={priceTier === "under-35"}
-                    onChange={() => setPriceTier("under-35")}
-                    className="h-4 w-4 text-neutral-900 focus:ring-neutral-900"
-                  />
-                  <span>Under {formatAmount(35)}</span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer hover:text-neutral-900 transition">
-                  <input
-                    type="radio"
-                    name="priceTier"
-                    checked={priceTier === "35-100"}
-                    onChange={() => setPriceTier("35-100")}
-                    className="h-4 w-4 text-neutral-900 focus:ring-neutral-900"
-                  />
-                  <span>{formatAmount(35)} – {formatAmount(100)}</span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer hover:text-neutral-900 transition">
-                  <input
-                    type="radio"
-                    name="priceTier"
-                    checked={priceTier === "100-plus"}
-                    onChange={() => setPriceTier("100-plus")}
-                    className="h-4 w-4 text-neutral-900 focus:ring-neutral-900"
-                  />
-                  <span>Over {formatAmount(100)}</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Filter Group 3: Origin & Country */}
-            <div className="space-y-3 border-t border-neutral-200/80 pt-5">
-              <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-900">
-                Origin & Region
-              </h4>
-              <div className="space-y-2 text-xs text-neutral-600 font-light">
+            {/* Origin Filter */}
+            <div className="space-y-3 border-t border-neutral-200/80 pt-6">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900">
+                Distillery Region
+              </h3>
+              <div className="space-y-2">
                 {origins.map((origin) => (
-                  <label key={origin} className="flex items-center gap-2.5 cursor-pointer hover:text-neutral-900 transition">
+                  <label
+                    key={origin}
+                    className="flex items-center gap-3 text-xs text-neutral-700 hover:text-neutral-900 cursor-pointer select-none"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedOrigins.includes(origin)}
                       onChange={() => handleOriginToggle(origin)}
-                      className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+                      className="h-4 w-4 rounded border-neutral-300 text-[#b8860b] focus:ring-[#b8860b]"
                     />
                     <span>{origin}</span>
                   </label>
@@ -384,37 +360,57 @@ export default function DiscoverPage() {
               </div>
             </div>
 
-            {/* Filter Group 4: Availability */}
-            <div className="border-t border-neutral-200/80 pt-5">
-              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-neutral-900">
+            {/* In Stock Toggle */}
+            <div className="border-t border-neutral-200/80 pt-6">
+              <label className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-neutral-900 cursor-pointer select-none">
+                <span>In Stock Only</span>
                 <input
                   type="checkbox"
                   checked={inStockOnly}
                   onChange={(e) => setInStockOnly(e.target.checked)}
-                  className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+                  className="h-4 w-4 rounded border-neutral-300 text-[#b8860b] focus:ring-[#b8860b]"
                 />
-                <span>In-Stock Allocations Only</span>
               </label>
             </div>
-
           </aside>
 
-          {/* Right Main Product Catalog Grid */}
-          <div className="lg:col-span-9 space-y-6">
+          {/* MAIN PRODUCT CATALOG GRID */}
+          <div className="space-y-6">
             
-            {/* Catalog Grid */}
+            {/* Results Counter & Sort Selector */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-neutral-200/80 pb-4">
+              <p className="text-xs text-neutral-600 font-light">
+                Showing <strong className="font-semibold text-neutral-900">{filteredProducts.length}</strong> distinctive bottles
+              </p>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-neutral-500 font-medium">Sort by:</span>
+                <select
+                  value={sortOption}
+                  onChange={(e: any) => setSortOption(e.target.value)}
+                  className="rounded-full border border-neutral-200/80 bg-white px-3 py-1.5 text-xs text-neutral-900 outline-none focus:border-[#b8860b]"
+                >
+                  <option value="featured">Sommelier Featured</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Product Cards Grid */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredProducts.map((product) => (
                 <article
                   key={product.id}
                   className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  {/* Product Image Container Stretched Edge-to-Edge */}
+                  {/* Product Image Container */}
                   <Link
-                    href={`/product/${product.id}`}
+                    href={productHref(product)}
                     className="relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]"
                   >
-                    {/* Upper Contents Floating Overlay: Badge & Circular Arrow Link */}
+                    {/* Floating Upper Badge & Circular Arrow */}
                     <div className="absolute left-3.5 top-3.5 right-3.5 z-10 flex items-center justify-between pointer-events-none">
                       {product.badge ? (
                         <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f3e5b8]/90 bg-[#fffcf0]/90 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-[#b8860b] shadow-xs">
@@ -425,7 +421,9 @@ export default function DiscoverPage() {
                         <div />
                       )}
 
-                      <div className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-neutral-800 shadow-sm transition-all duration-300 group-hover:bg-neutral-900 group-hover:text-white">
+                      <div
+                        className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-neutral-800 shadow-sm transition-all duration-300 group-hover:bg-neutral-900 group-hover:text-white"
+                      >
                         <ArrowUpRight size={16} />
                       </div>
                     </div>
@@ -437,21 +435,35 @@ export default function DiscoverPage() {
                     />
                   </Link>
 
-                  {/* Bottom Info Row */}
-                  <div className="flex items-end justify-between gap-3 pt-3 px-2 pb-1 z-10">
-                    <Link href={`/product/${product.id}`} className="group/title">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">
-                        {product.producer} · {product.category}
-                      </p>
-                      <h3 className="mt-0.5 text-base font-semibold tracking-tight text-neutral-900 group-hover/title:text-[#b8860b] transition">
-                        {product.name}
-                      </h3>
-                    </Link>
-
-                    <div className="flex flex-col items-end">
-                      <span className="text-base font-bold text-neutral-900">
-                        {formatAmount(product.numericPrice)}
+                  {/* Product Meta & Information */}
+                  <div className="mt-4 flex flex-col justify-between flex-1">
+                    <div>
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8e8e8e]">
+                        {product.producer} • {product.origin}
                       </span>
+                      <h3 className="font-serif text-lg font-bold text-neutral-900 mt-1 line-clamp-1">
+                        <Link href={productHref(product)} className="hover:text-[#b8860b] transition">
+                          {product.name}
+                        </Link>
+                      </h3>
+                      <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-1 font-light">
+                        <span>{product.volume}</span>
+                        <span>•</span>
+                        <span>{product.abv}</span>
+                      </div>
+                    </div>
+
+                    {/* Price & Add to Cart Action */}
+                    <div className="mt-4 flex items-end justify-between border-t border-neutral-100 pt-3">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider text-neutral-400">Price</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-sans text-sm sm:text-base font-bold tracking-tight text-neutral-900">
+                            {formatAmount(product.numericPrice)}
+                          </span>
+                        </div>
+                      </div>
+
                       <button
                         onClick={(e) => {
                           e.preventDefault();
@@ -495,3 +507,10 @@ export default function DiscoverPage() {
   );
 }
 
+export default function DiscoverPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#faf8f5] flex items-center justify-center text-xs font-semibold text-neutral-500">Loading fine collection…</div>}>
+      <DiscoverContent />
+    </Suspense>
+  );
+}

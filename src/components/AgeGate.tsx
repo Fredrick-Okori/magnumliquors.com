@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, Wine, AlertCircle, RefreshCw } from "lucide-react";
+import { ShieldCheck, Wine, AlertCircle, RefreshCw, Check } from "lucide-react";
 
 export function AgeGate() {
   const [mounted, setMounted] = useState(false);
@@ -30,38 +30,41 @@ export function AgeGate() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 select-none animate-fadeIn">
-      <div className="relative w-full max-w-md rounded-3xl border border-white/15 bg-[#12100d] p-8 sm:p-10 text-center text-[#FAF7F2] shadow-2xl space-y-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-md p-4 select-none animate-fadeIn font-sans">
+      <div className="relative w-full max-w-md rounded-3xl border border-neutral-200/80 bg-white p-8 sm:p-10 text-center text-neutral-900 shadow-2xl space-y-6">
         
-        {/* Brand Header */}
+        {/* Brand Header matching BrandsShelf typography */}
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#e5c875]">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f3e5b8] bg-[#fffcf0] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#b8860b]">
             <ShieldCheck size={13} className="text-[#d4af37]" />
             <span>Age Verification Required</span>
           </div>
 
-          <h2 className="font-serif text-3xl font-bold tracking-tight text-white uppercase sm:text-4xl">
-            MAGNUM<span className="text-[#d4af37]">.</span>
+          <h2 className="font-serif text-3xl sm:text-4xl font-light tracking-tight text-neutral-900 uppercase">
+            MAGNUM<span className="text-[#b8860b]">.</span>
           </h2>
+          <p className="font-serif text-xs font-medium uppercase tracking-[0.2em] text-[#b8860b]">
+            FINE WINE & SPIRITS
+          </p>
         </div>
 
         {underage ? (
           /* Underage Access Restriction View */
           <div className="space-y-5 py-2">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-600 border border-red-200">
               <AlertCircle size={28} />
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-white">Access Restricted</h3>
-              <p className="text-xs text-neutral-300 leading-relaxed font-light">
-                Sorry, you must be 18 years of age or older to enter Magnum Liquors and view our products.
+              <h3 className="font-serif text-2xl font-light text-neutral-900">Access Restricted</h3>
+              <p className="text-xs text-neutral-600 leading-relaxed font-sans">
+                Sorry, you must be 18 years of age or older to view and purchase products from Magnum Liquors.
               </p>
             </div>
 
             <button
               onClick={() => setUnderage(false)}
-              className="inline-flex items-center gap-2 text-xs font-semibold text-[#d4af37] hover:text-[#e5c875] transition pt-2"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-[#b8860b] hover:underline pt-2 font-sans"
             >
               <RefreshCw size={14} /> Try again
             </button>
@@ -70,36 +73,38 @@ export function AgeGate() {
           /* Verification Prompt View */
           <>
             <div className="space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[#d4af37]">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#fffcf0] border border-[#f3e5b8] text-[#b8860b]">
                 <Wine size={22} />
               </div>
 
-              <h3 className="text-xl font-semibold text-white">Are you 18 or older?</h3>
+              <h3 className="font-serif text-2xl font-light text-neutral-900">
+                Are you 18 years or older?
+              </h3>
 
-              <p className="text-xs text-neutral-300 leading-relaxed font-light max-w-xs mx-auto">
-                Please confirm that you are at least 18 years of age to proceed to view our collection of fine wines & spirits.
+              <p className="text-xs text-neutral-600 leading-relaxed max-w-xs mx-auto font-sans">
+                Please confirm that you are at least 18 years of age to proceed into our fine spirits collection.
               </p>
             </div>
 
             {/* Decision Action Buttons */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1">
               <button
                 onClick={handleConfirmAge}
-                className="w-full rounded-full bg-[#d4af37] py-3.5 text-xs font-bold uppercase tracking-[0.18em] text-[#0c0a08] transition hover:bg-[#e5c875] shadow-md"
+                className="w-full rounded-full bg-[#b8860b] hover:bg-[#996515] py-3.5 text-xs font-bold uppercase tracking-widest text-white transition shadow-md flex items-center justify-center gap-2 font-sans"
               >
-                Yes, I am 18 or older
+                <Check size={15} /> Yes, I am 18 or older
               </button>
 
               <button
                 onClick={handleDenyAge}
-                className="w-full rounded-full border border-white/20 bg-transparent py-3.5 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-400 transition hover:border-white/40 hover:text-white"
+                className="w-full rounded-full border border-neutral-200 bg-neutral-50 py-3.5 text-xs font-semibold uppercase tracking-widest text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-900 font-sans"
               >
                 No, I am under 18
               </button>
             </div>
 
-            <p className="text-[10px] text-neutral-500 font-light">
-              Drink thoughtfully · 21+ in the US / 18+ internationally
+            <p className="text-[10px] text-neutral-400 font-light font-sans">
+              Thoughtfully Sourced · Enjoy Responsibly · 18+ Required
             </p>
           </>
         )}
@@ -108,4 +113,3 @@ export function AgeGate() {
     </div>
   );
 }
-

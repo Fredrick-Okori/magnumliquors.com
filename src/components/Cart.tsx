@@ -71,6 +71,12 @@ export function Cart({
     const generatedOrderNum = `MAG-${Math.floor(10000 + Math.random() * 90000)}`;
     setOrderNumber(generatedOrderNum);
 
+    const totalUGX = Math.round(grandTotal * 3700);
+    const systemCommUSD = Number((grandTotal * 0.15).toFixed(2));
+    const systemCommUGX = Math.round(totalUGX * 0.15);
+    const netPayoutUSD = Number((grandTotal * 0.85).toFixed(2));
+    const netPayoutUGX = Math.round(totalUGX * 0.85);
+
     const orderPayload = {
       orderNumber: generatedOrderNum,
       customerName: fullName,
@@ -81,7 +87,12 @@ export function Cart({
       paymentMethod,
       paymentStatus: "Pending",
       totalAmountUSD: grandTotal,
-      totalAmountUGX: Math.round(grandTotal * 3700),
+      totalAmountUGX: totalUGX,
+      commissionRate: 0.15,
+      systemCommissionUSD: systemCommUSD,
+      systemCommissionUGX: systemCommUGX,
+      netPayoutUSD,
+      netPayoutUGX,
       items: items.map((item) => ({
         productName: item.name,
         quantity: item.quantity,
@@ -98,6 +109,42 @@ export function Cart({
       });
     } catch (err) {
       console.warn("Order post to Payload error:", err);
+    }
+
+    // Save order locally so it is immediately visible in the Dashboard
+    const newPlacedOrder = {
+      id: String(Date.now()),
+      orderNumber: generatedOrderNum,
+      customerName: fullName,
+      customerEmail: email,
+      customerPhone: phone,
+      deliveryAddress: address,
+      orderStatus: "Pending",
+      paymentMethod,
+      paymentStatus: "Pending",
+      totalAmountUSD: grandTotal,
+      totalAmountUGX: totalUGX,
+      commissionRate: 0.15,
+      systemCommissionUSD: systemCommUSD,
+      systemCommissionUGX: systemCommUGX,
+      netPayoutUSD,
+      netPayoutUGX,
+      priority: "High",
+      items: items.map((item) => ({
+        productName: item.name,
+        quantity: item.quantity,
+        unitPriceUSD: item.numericPrice,
+        subtotalUSD: item.numericPrice * item.quantity,
+      })),
+      createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    };
+
+    try {
+      const existingRaw = localStorage.getItem("magnum_placed_orders");
+      const existing = existingRaw ? JSON.parse(existingRaw) : [];
+      localStorage.setItem("magnum_placed_orders", JSON.stringify([newPlacedOrder, ...existing]));
+    } catch (e) {
+      console.warn("Failed to save placed order locally:", e);
     }
 
     setIsSubmitting(false);
@@ -188,17 +235,17 @@ export function Cart({
                       <p className="text-[10px] font-bold uppercase tracking-wider text-[#d4af37]">
                         {item.producer}
                       </p>
-                      <h3 className="text-xs font-semibold text-white truncate mt-0.5">
+                      <h3 className="font-serif text-sm font-bold text-white truncate mt-0.5">
                         {item.name}
                       </h3>
-                      <p className="text-[11px] font-mono font-medium text-neutral-300 mt-1">
-                        {formatAmount(item.numericPrice)} <span className="text-[10px] text-neutral-500 font-sans">each</span>
+                      <p className="text-xs font-sans font-bold text-neutral-300 mt-1">
+                        {formatAmount(item.numericPrice)} <span className="text-[10px] text-neutral-400 font-normal">each</span>
                       </p>
                     </div>
 
                     {/* Quantity & Subtotal */}
                     <div className="flex flex-col items-end gap-2.5">
-                      <span className="font-mono text-xs font-bold text-[#e5c875]">
+                      <span className="font-sans text-sm font-bold text-[#e5c875]">
                         {formatAmount(item.numericPrice * item.quantity)}
                       </span>
 
@@ -245,7 +292,7 @@ export function Cart({
                     <span className="flex items-center gap-1.5 text-neutral-400">
                       <FileText size={13} className="text-[#d4af37]" /> Subtotal
                     </span>
-                    <span className="font-mono text-white">{formatAmount(subtotal)}</span>
+                    <span className="font-sans font-bold text-white">{formatAmount(subtotal)}</span>
                   </div>
 
                   <div className="flex items-center justify-between font-medium">
@@ -259,12 +306,12 @@ export function Cart({
 
                   <div className="flex items-center justify-between font-medium">
                     <span className="text-neutral-400">Estimated Tax (8%)</span>
-                    <span className="font-mono text-white">{formatAmount(estimatedTax)}</span>
+                    <span className="font-sans font-bold text-white">{formatAmount(estimatedTax)}</span>
                   </div>
 
                   <div className="border-t border-white/10 pt-2.5 flex items-center justify-between">
                     <span className="text-sm font-semibold text-white">Grand Total</span>
-                    <span className="font-serif text-xl font-normal text-[#e5c875]">
+                    <span className="font-sans text-xl font-extrabold text-[#e5c875]">
                       {formatAmount(grandTotal)}
                     </span>
                   </div>

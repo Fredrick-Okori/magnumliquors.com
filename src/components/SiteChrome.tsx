@@ -19,7 +19,8 @@ function ChromeContent({ children }: { children: React.ReactNode }) {
   const isPayloadAdmin =
     pathname?.startsWith("/admin") ||
     pathname?.startsWith("/api") ||
-    pathname?.startsWith("/dashboard");
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/login");
 
   if (isPayloadAdmin) {
     return <>{children}</>;

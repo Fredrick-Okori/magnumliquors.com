@@ -19,22 +19,26 @@ import { Hero } from "@/components/Hero";
 import { BrandsShelf } from "@/components/BrandsShelf";
 import { useCart } from "@/components/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { products, Product } from "@/data/products";
+import { products, Product, productHref } from "@/data/products";
 
 const categories = [
   { name: "All bottles", icon: LayoutGrid },
+  { name: "Whiskey", icon: GlassWater },
+  { name: "Rum", icon: Flame },
+  { name: "Vodka", icon: Sparkles },
+  { name: "Liqueur", icon: Wine },
+  { name: "Gin", icon: Beer },
+  { name: "Tequila", icon: Flame },
+  { name: "Brandy", icon: GlassWater },
+  { name: "Champagne", icon: Sparkles },
   { name: "Wine", icon: Wine },
-  { name: "Spirits", icon: Flame },
-  { name: "Bourbon", icon: GlassWater },
-  { name: "Beer", icon: Beer },
-  { name: "Non-alcoholic", icon: Sparkles },
 ];
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState("All bottles");
   const [query, setQuery] = useState("");
   const [addedProduct, setAddedProduct] = useState<string | null>(null);
-  const [productList, setProductList] = useState<Product[]>(products);
+  const [productList, setProductList] = useState<Product[]>([]);
 
   const { addToCart, openCart } = useCart();
   const { formatAmount } = useCurrency();
@@ -43,11 +47,26 @@ export default function Home() {
     fetch("/api/store-products")
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setProductList(data);
-        }
+        const apiList = Array.isArray(data) ? data : [];
+        let localProducts: Product[] = [];
+        try {
+          localProducts = JSON.parse(localStorage.getItem("magnum_added_products") || "[]");
+        } catch (e) {}
+
+        let deletedIds = new Set<string>();
+        try {
+          const raw = localStorage.getItem("magnum_deleted_product_ids");
+          deletedIds = new Set(raw ? JSON.parse(raw) : []);
+        } catch (e) {}
+
+        const combined = [
+          ...localProducts,
+          ...apiList.filter((ap) => !localProducts.some((lp) => String(lp.id) === String(ap.id))),
+        ].filter((p) => !deletedIds.has(String(p.id)));
+
+        setProductList(combined);
       })
-      .catch((err) => console.warn("Failed to load Payload products:", err));
+      .catch((err) => console.warn("Failed to load store products:", err));
   }, []);
 
   const handleAddToCart = (product: Product) => {
@@ -134,7 +153,7 @@ export default function Home() {
               >
                 {/* Product Image Container Stretched Edge-to-Edge */}
                 <Link
-                  href={`/product/${product.id}`}
+                  href={productHref(product)}
                   className="relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]"
                 >
                   {/* Floating Upper Contents Overlay: Badge & Circular Arrow Button */}
@@ -165,17 +184,17 @@ export default function Home() {
 
                 {/* Bottom Row: Producer, Title & Price */}
                 <div className="flex items-end justify-between gap-3 pt-3 px-2 pb-1 z-10">
-                  <Link href={`/product/${product.id}`} className="group/title">
+                  <Link href={productHref(product)} className="group/title">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">
                       {product.producer} · {product.category}
                     </p>
-                    <h3 className="mt-0.5 text-base font-semibold tracking-tight text-neutral-900 group-hover/title:text-[#b8860b] transition">
+                    <h3 className="mt-0.5 font-serif text-lg font-bold tracking-tight text-neutral-900 group-hover/title:text-[#b8860b] transition">
                       {product.name}
                     </h3>
                   </Link>
 
                   <div className="flex flex-col items-end">
-                    <span className="text-base font-bold text-neutral-900">
+                    <span className="font-sans text-sm sm:text-base font-bold tracking-tight text-neutral-900">
                       {formatAmount(product.numericPrice)}
                     </span>
                     <button

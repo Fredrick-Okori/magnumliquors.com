@@ -1,60 +1,61 @@
 import { NextResponse } from "next/server";
-import { getPayload } from "payload";
-import configPromise from "@payload-config";
 import { saveOrderToSupabase, supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // 1. Attempt Payload CMS Query
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "orders",
-      limit: 100,
-    });
+    const { data: supabaseOrders, error } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    if (response.docs && response.docs.length > 0) {
-      return NextResponse.json({ docs: response.docs });
+    if (error) {
+      console.warn("Supabase orders query error:", error.message);
+      return NextResponse.json({ docs: [] });
     }
+
+    const mappedOrders = (supabaseOrders || []).map((so: any) => ({
+      id: String(so.id),
+      orderNumber: so.order_number || `MAG-${so.id}`,
+      customerName: so.customer_name || "Valued Customer",
+      customerEmail: so.customer_email || "N/A",
+      customerPhone: so.customer_phone || "N/A",
+      deliveryAddress: so.delivery_address || "Kampala, Uganda",
+      orderStatus: so.order_status || "Pending",
+      paymentMethod: so.payment_method || "Cash on Delivery",
+      paymentStatus: so.payment_status || "Pending",
+      totalAmountUSD: Number(so.total_amount_usd || 0),
+      totalAmountUGX: Number(so.total_amount_ugx || 0),
+      commissionRate: Number(so.commission_rate || 0.15),
+      systemCommissionUSD: Number(so.system_commission_usd || 0),
+      systemCommissionUGX: Number(so.system_commission_ugx || 0),
+      netPayoutUSD: Number(so.net_payout_usd || 0),
+      netPayoutUGX: Number(so.net_payout_ugx || 0),
+      items: so.items || [],
+      createdAt: so.created_at || new Date().toISOString(),
+    }));
+
+    return NextResponse.json({ docs: mappedOrders });
   } catch (error) {
-    console.warn("Payload Orders query fallback:", error);
+    console.error("GET orders Supabase error:", error);
+    return NextResponse.json({ docs: [] }, { status: 500 });
   }
-
-  // 2. Fallback to Supabase Query
-  try {
-    const { data: supabaseOrders } = await supabase.from("orders").select("*");
-    if (supabaseOrders && supabaseOrders.length > 0) {
-      const mappedDocs = supabaseOrders.map((so: any) => ({
-        id: so.id,
-        orderNumber: so.order_number,
-        customerName: so.customer_name,
-        customerEmail: so.customer_email,
-        customerPhone: so.customer_phone,
-        deliveryAddress: so.delivery_address,
-        orderStatus: so.order_status,
-        paymentMethod: so.payment_method,
-        paymentStatus: so.payment_status,
-        totalAmountUSD: so.total_amount_usd,
-        totalAmountUGX: so.total_amount_ugx,
-        items: so.items || [],
-        createdAt: so.created_at,
-      }));
-      return NextResponse.json({ docs: mappedDocs });
-    }
-  } catch (supabaseErr) {
-    console.warn("Supabase orders query exception:", supabaseErr);
-  }
-
-  return NextResponse.json({ docs: [] });
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // 1. Persist to Supabase Database
-    await saveOrderToSupabase({
+    const grossUSD = Number(body.totalAmountUSD || 0);
+    const grossUGX = Number(body.totalAmountUGX || 0);
+    const commRate = Number(body.commissionRate || 0.15);
+    const sysCommUSD = body.systemCommissionUSD ?? Number((grossUSD * commRate).toFixed(2));
+    const sysCommUGX = body.systemCommissionUGX ?? Math.round(grossUGX * commRate);
+    const netPayoutUSD = body.netPayoutUSD ?? Number((grossUSD * (1 - commRate)).toFixed(2));
+    const netPayoutUGX = body.netPayoutUGX ?? Math.round(grossUGX * (1 - commRate));
+
+    const saved = await saveOrderToSupabase({
       order_number: body.orderNumber || `MAG-${Math.floor(10000 + Math.random() * 90000)}`,
       customer_name: body.customerName,
       customer_email: body.customerEmail,
@@ -63,39 +64,86 @@ export async function POST(request: Request) {
       order_status: body.orderStatus || "Pending",
       payment_method: body.paymentMethod || "Cash on Delivery",
       payment_status: body.paymentStatus || "Pending",
-      total_amount_usd: Number(body.totalAmountUSD || 0),
-      total_amount_ugx: Number(body.totalAmountUGX || 0),
+      total_amount_usd: grossUSD,
+      total_amount_ugx: grossUGX,
+      commission_rate: commRate,
+      system_commission_usd: sysCommUSD,
+      system_commission_ugx: sysCommUGX,
+      net_payout_usd: netPayoutUSD,
+      net_payout_ugx: netPayoutUGX,
       items: body.items || [],
     });
 
-    // 2. Persist to Payload CMS Database
-    try {
-      const payload = await getPayload({ config: configPromise });
-      const createdOrder = await payload.create({
-        collection: "orders",
-        data: {
-          orderNumber: body.orderNumber || `MAG-${Math.floor(10000 + Math.random() * 90000)}`,
-          customerName: body.customerName,
-          customerEmail: body.customerEmail,
-          customerPhone: body.customerPhone,
-          deliveryAddress: body.deliveryAddress,
-          orderStatus: body.orderStatus || "Pending",
-          paymentMethod: body.paymentMethod || "Cash on Delivery",
-          paymentStatus: body.paymentStatus || "Pending",
-          totalAmountUSD: Number(body.totalAmountUSD || 0),
-          totalAmountUGX: Number(body.totalAmountUGX || 0),
-          items: body.items || [],
-        },
-      });
-
-      return NextResponse.json({ success: true, order: createdOrder });
-    } catch (payloadErr) {
-      console.warn("Payload order creation notice:", payloadErr);
-      return NextResponse.json({ success: true, notice: "Saved to Supabase DB" });
+    if (saved.error) {
+      console.warn("Order save notice:", saved.error);
+      return NextResponse.json({
+        success: false,
+        error: saved.error,
+        order: { id: `LOCAL-${Date.now()}`, ...body },
+      }, { status: 400 });
     }
-  } catch (error) {
+
+    return NextResponse.json({ success: true, order: saved.data });
+  } catch (error: any) {
     console.error("Order POST creation error:", error);
-    return NextResponse.json({ error: "Failed to process order" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to process order in Supabase" }, { status: 500 });
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    const orderNumber = searchParams.get("orderNumber");
+    const body = await request.json();
+
+    const updatePayload: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (body.orderStatus !== undefined) updatePayload.order_status = body.orderStatus;
+    if (body.paymentStatus !== undefined) updatePayload.payment_status = body.paymentStatus;
+    if (body.deliveryAddress !== undefined) updatePayload.delivery_address = body.deliveryAddress;
+    if (body.customerPhone !== undefined) updatePayload.customer_phone = body.customerPhone;
+
+    let query = supabase.from("orders").update(updatePayload);
+    if (id) {
+      query = query.eq("id", id);
+    } else if (orderNumber) {
+      query = query.eq("order_number", orderNumber);
+    } else {
+      return NextResponse.json({ error: "Order id or orderNumber is required" }, { status: 400 });
+    }
+
+    const { data, error } = await query.select();
+    if (error) {
+      console.warn("Supabase order update notice:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, order: data?.[0] });
+  } catch (error) {
+    console.error("PATCH order Supabase error:", error);
+    return NextResponse.json({ error: "Failed to update order in Supabase" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Order id is required" }, { status: 400 });
+    }
+
+    const { error } = await supabase.from("orders").delete().eq("id", id);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("DELETE order error:", error);
+    return NextResponse.json({ error: "Failed to delete order" }, { status: 500 });
+  }
+}

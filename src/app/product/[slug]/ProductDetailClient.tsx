@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Heart,
+  Loader2,
   Minus,
   Plus,
   ShieldCheck,
@@ -20,41 +21,118 @@ import {
 } from "lucide-react";
 import { useCart } from "@/components/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { getProductById, products } from "@/data/products";
+import {
+  Product,
+  getProductBySlug,
+  productHref,
+} from "@/data/products";
 
-export default function ProductDetailPage() {
+interface ProductDetailClientProps {
+  initialSlug?: string;
+  initialProduct?: Product;
+}
+
+export default function ProductDetailClient({
+  initialSlug,
+  initialProduct,
+}: ProductDetailClientProps) {
   const params = useParams();
-  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
-  const initialProduct = getProductById(id || "1");
+  const pathname = usePathname();
 
-  const [product, setProduct] = useState(initialProduct);
-  const [productList, setProductList] = useState<typeof products>(products);
+  // Extract raw slug from props, params, or pathname fallback
+  const paramSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
+  const pathSlug = pathname ? pathname.split("/").filter(Boolean).pop() : "";
+  const currentSlug = String(initialSlug || paramSlug || pathSlug || "");
+
+  const [product, setProduct] = useState<Product | undefined>(initialProduct);
+  const [productList, setProductList] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(!initialProduct);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeTab, setActiveTab] = useState<"tasting" | "specs">("tasting");
   const { addToCart, openCart } = useCart();
   const { formatAmount } = useCurrency();
 
+  // Dynamically update document title on client for immediate SEO & tab naming
   useEffect(() => {
-    fetch("/api/store-products")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setProductList(data);
-          const found = data.find((p: any) => String(p.id) === String(id));
-          if (found) {
-            setProduct(found);
-          }
+    if (product?.name) {
+      document.title = `${product.name} — ${product.producer} | Magnum Liquors`;
+    }
+  }, [product]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!initialProduct) {
+      setIsLoading(true);
+    }
+
+    const loadData = async () => {
+      try {
+        const res = await fetch("/api/store-products");
+        const data = await res.json();
+        const apiList: Product[] = Array.isArray(data) ? data : [];
+
+        let localProducts: Product[] = [];
+        try {
+          localProducts = JSON.parse(localStorage.getItem("magnum_added_products") || "[]");
+        } catch (e) {}
+
+        let deletedIds = new Set<string>();
+        try {
+          const raw = localStorage.getItem("magnum_deleted_product_ids");
+          deletedIds = new Set(raw ? JSON.parse(raw) : []);
+        } catch (e) {}
+
+        // Combine API and local products without duplicates
+        const allProducts = [
+          ...localProducts,
+          ...apiList.filter((ap) => !localProducts.some((lp) => String(lp.id) === String(ap.id))),
+        ].filter((p) => !deletedIds.has(String(p.id)));
+
+        if (!isMounted) return;
+
+        setProductList(allProducts);
+
+        // Find by slug (handles slugified name, compound name-origin, ID, and raw name)
+        const found = getProductBySlug(currentSlug, allProducts);
+        setProduct(found);
+      } catch (err) {
+        console.warn("Failed to load store product details:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
         }
-      })
-      .catch((err) => console.warn("Failed to load Payload product details:", err));
-  }, [id]);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentSlug, initialProduct]);
+
+  if (isLoading && !product) {
+    return (
+      <div className="min-h-screen bg-[#f4f4f3] flex flex-col items-center justify-center px-6 py-24 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="animate-spin text-[#b8860b]" size={36} />
+          <p className="text-xs font-bold uppercase tracking-widest text-[#71717a]">
+            Loading Bottle Details…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
       <div className="min-h-screen bg-[#f4f4f3] flex flex-col items-center justify-center px-6 py-24 text-center">
-        <h1 className="font-serif text-4xl text-neutral-900 mb-4">Pour Not Found</h1>
-        <p className="text-neutral-600 mb-8">The bottle you are looking for may have been claimed or moved.</p>
+        <Wine size={48} className="mx-auto mb-4 text-[#a1a1aa]" />
+        <h1 className="font-serif text-4xl text-neutral-900 mb-2">Pour Not Found</h1>
+        <p className="text-neutral-600 mb-8 max-w-md text-xs">
+          The bottle you are looking for may have been claimed, renamed, or is currently out of cellar allocation.
+        </p>
         <Link
           href="/#shop"
           className="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-6 py-3 text-xs font-semibold text-white uppercase tracking-widest transition hover:bg-neutral-800"
@@ -86,7 +164,7 @@ export default function ProductDetailPage() {
             <ChevronRight size={13} className="text-neutral-400" />
             <Link href="/#shop" className="hover:text-neutral-900 transition">Shop</Link>
             <ChevronRight size={13} className="text-neutral-400" />
-            <span className="font-medium text-neutral-900">{product.name}</span>
+            <span className="font-medium text-neutral-900 truncate max-w-[200px] sm:max-w-none">{product.name}</span>
           </div>
 
           <Link
@@ -101,11 +179,11 @@ export default function ProductDetailPage() {
       {/* Main Product Showcase Section */}
       <main className="mx-auto max-w-7xl px-5 pt-8 lg:px-10 lg:pt-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14 items-start">
-          
+
           {/* Left Column: Product Image Showcase */}
           <div className="lg:col-span-6">
             <div className="relative aspect-square w-full overflow-hidden rounded-3xl border border-neutral-200/70 bg-white shadow-[0_4px_25px_rgba(0,0,0,0.03)] flex items-center justify-center">
-              
+
               {/* Badge Overlay */}
               {product.badge && (
                 <div className="absolute left-6 top-6 z-10 inline-flex items-center gap-1.5 rounded-full border border-[#f3e5b8] bg-[#fffcf0] px-3.5 py-1.5 text-xs font-semibold text-[#b8860b]">
@@ -122,7 +200,7 @@ export default function ProductDetailPage() {
                 <Heart size={18} />
               </button>
 
-              {/* Edge-to-Edge Product Image (object-cover) */}
+              {/* Product Image */}
               <img
                 src={product.image}
                 alt={product.name}
@@ -149,7 +227,7 @@ export default function ProductDetailPage() {
 
           {/* Right Column: Details & Purchasing Controls */}
           <div className="lg:col-span-6 flex flex-col">
-            
+
             {/* Brand & Origin */}
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">
               {product.producer} · {product.origin}
@@ -174,14 +252,14 @@ export default function ProductDetailPage() {
 
             {/* Price Block */}
             <div className="mt-6 flex items-baseline gap-3 border-y border-neutral-200/80 py-4">
-              <span className="text-3xl font-bold tracking-tight text-neutral-900">
+              <span className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900">
                 {formatAmount(product.numericPrice)}
               </span>
             </div>
 
             {/* Description */}
             <p className="mt-5 text-sm leading-relaxed text-neutral-600 font-light">
-              {product.description}
+              {product.description || "Crafted to perfection with premium ingredients and heritage distilling tradition."}
             </p>
 
             {/* Quantity Selector & Add to Cart */}
@@ -211,7 +289,7 @@ export default function ProductDetailPage() {
               <button
                 onClick={handleAddToCart}
                 className={`flex-1 min-w-[200px] flex h-12 items-center justify-center gap-2 rounded-full bg-neutral-900 px-8 text-xs font-bold uppercase tracking-[0.18em] text-white shadow-md transition-all hover:bg-neutral-800 ${
-                  added ? "bg-emerald-700 text-white" : ""
+                  added ? "bg-[#b8860b] text-white" : ""
                 }`}
               >
                 <ShoppingBag size={16} />
@@ -221,7 +299,7 @@ export default function ProductDetailPage() {
 
             {/* Specs & Tasting Tabs Section */}
             <div className="mt-10 rounded-3xl border border-neutral-200/80 bg-white p-6 shadow-xs">
-              
+
               {/* Tabs Switcher */}
               <div className="flex border-b border-neutral-200/80 pb-3">
                 <button
@@ -253,25 +331,25 @@ export default function ProductDetailPage() {
                     <span className="font-semibold text-[#b8860b] uppercase tracking-wider block mb-0.5">
                       Nose & Aromatics
                     </span>
-                    <p className="text-neutral-600 leading-relaxed">{product.tastingNotes.nose}</p>
+                    <p className="text-neutral-600 leading-relaxed">{product.tastingNotes?.nose || "Warm notes of toasted oak and subtle aromatics."}</p>
                   </div>
                   <div>
                     <span className="font-semibold text-[#b8860b] uppercase tracking-wider block mb-0.5">
                       Palate & Texture
                     </span>
-                    <p className="text-neutral-600 leading-relaxed">{product.tastingNotes.palate}</p>
+                    <p className="text-neutral-600 leading-relaxed">{product.tastingNotes?.palate || "Rich layered complexity with elegant smooth mouthfeel."}</p>
                   </div>
                   <div>
                     <span className="font-semibold text-[#b8860b] uppercase tracking-wider block mb-0.5">
                       Finish
                     </span>
-                    <p className="text-neutral-600 leading-relaxed">{product.tastingNotes.finish}</p>
+                    <p className="text-neutral-600 leading-relaxed">{product.tastingNotes?.finish || "Long velvety lingering finish."}</p>
                   </div>
                   <div className="rounded-xl border border-[#f3e5b8] bg-[#fffcf0] p-3">
                     <span className="font-semibold text-neutral-900 uppercase tracking-wider block mb-0.5">
                       Sommelier Pairing
                     </span>
-                    <p className="text-neutral-700 leading-relaxed">{product.tastingNotes.pairing}</p>
+                    <p className="text-neutral-700 leading-relaxed">{product.tastingNotes?.pairing || "Best enjoyed neat, on the rocks, or paired with fine artisan desserts."}</p>
                   </div>
                 </div>
               ) : (
@@ -286,86 +364,86 @@ export default function ProductDetailPage() {
                   </div>
                   <div className="rounded-xl bg-neutral-50 p-3">
                     <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Vintage</span>
-                    <span className="font-semibold text-neutral-900">{product.vintage || "N/A"}</span>
+                    <span className="font-semibold text-neutral-900">{product.vintage || "Reserve Selection"}</span>
                   </div>
                   <div className="rounded-xl bg-neutral-50 p-3">
                     <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Maturation / Cask</span>
-                    <span className="font-semibold text-neutral-900">{product.cask || "Standard Aging"}</span>
+                    <span className="font-semibold text-neutral-900">{product.cask || "Selected Oak Casks"}</span>
                   </div>
                 </div>
               )}
-
             </div>
-
           </div>
-
         </div>
 
         {/* You May Also Like Section */}
-        <div className="mt-24 border-t border-neutral-200/80 pt-16">
-          <div className="mb-8 flex items-end justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">
-                Complete Your Cellar
-              </p>
-              <h2 className="mt-1 font-serif text-3xl text-neutral-900">
-                You May Also Enjoy
-              </h2>
-            </div>
-            <Link
-              href="/#shop"
-              className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-900 hover:text-[#b8860b] transition"
-            >
-              View Full Collection <ArrowUpRight size={16} />
-            </Link>
-          </div>
-
-          {/* Related Products 3-Column Grid */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-            {relatedProducts.map((rel) => (
+        {relatedProducts.length > 0 && (
+          <div className="mt-24 border-t border-neutral-200/80 pt-16">
+            <div className="mb-8 flex items-end justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">
+                  Complete Your Cellar
+                </p>
+                <h2 className="mt-1 font-serif text-3xl text-neutral-900">
+                  You May Also Enjoy
+                </h2>
+              </div>
               <Link
-                key={rel.id}
-                href={`/product/${rel.id}`}
-                className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                href="/#shop"
+                className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-900 hover:text-[#b8860b] transition"
               >
-                <div className="flex items-center justify-between z-10">
-                  {rel.badge ? (
-                    <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f3e5b8] bg-[#fffcf0] px-3 py-1 text-[11px] font-semibold text-[#b8860b]">
-                      <CheckCircle2 size={13} className="text-[#d4af37]" />
-                      <span>{rel.badge}</span>
-                    </div>
-                  ) : (
-                    <div />
-                  )}
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 transition group-hover:bg-neutral-900 group-hover:text-white">
-                    <ArrowUpRight size={16} />
-                  </div>
-                </div>
-
-                <div className="relative my-6 flex aspect-[1.1] items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]">
-                  <img
-                    src={rel.image}
-                    alt={rel.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-
-                <div className="flex items-end justify-between gap-3 pt-2 z-10">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">
-                      {rel.producer} · {rel.category}
-                    </p>
-                    <h3 className="mt-0.5 text-base font-semibold tracking-tight text-neutral-900">
-                      {rel.name}
-                    </h3>
-                  </div>
-                  <span className="text-base font-bold text-neutral-900">{formatAmount(rel.numericPrice)}</span>
-                </div>
+                View Full Collection <ArrowUpRight size={16} />
               </Link>
-            ))}
+            </div>
+
+            {/* Related Products 3-Column Grid */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+              {relatedProducts.map((rel) => (
+                <Link
+                  key={rel.id}
+                  href={productHref(rel)}
+                  className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="flex items-center justify-between z-10">
+                    {rel.badge ? (
+                      <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f3e5b8] bg-[#fffcf0] px-3 py-1 text-[11px] font-semibold text-[#b8860b]">
+                        <CheckCircle2 size={13} className="text-[#d4af37]" />
+                        <span>{rel.badge}</span>
+                      </div>
+                    ) : (
+                      <div />
+                    )}
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 transition group-hover:bg-neutral-900 group-hover:text-white">
+                      <ArrowUpRight size={16} />
+                    </div>
+                  </div>
+
+                  <div className="relative my-6 flex aspect-[1.1] items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]">
+                    <img
+                      src={rel.image}
+                      alt={rel.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+
+                  <div className="flex items-end justify-between gap-3 pt-2 z-10">
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">
+                        {rel.producer} · {rel.category}
+                      </p>
+                      <h3 className="mt-0.5 text-base font-semibold tracking-tight text-neutral-900">
+                        {rel.name}
+                      </h3>
+                    </div>
+                    <span className="text-base font-bold text-neutral-900">{formatAmount(rel.numericPrice)}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
 }
+
