@@ -15,14 +15,13 @@ function ChromeContent({ children }: { children: React.ReactNode }) {
   const { count, cartOpen, openCart, closeCart } = useCart();
   const pathname = usePathname();
 
-  // Omit storefront chrome on Payload Admin & Custom Dashboard routes
-  const isPayloadAdmin =
-    pathname?.startsWith("/admin") ||
+  // Omit storefront chrome on Dashboard & Auth routes
+  const isDashboardRoute =
     pathname?.startsWith("/api") ||
     pathname?.startsWith("/dashboard") ||
     pathname?.startsWith("/login");
 
-  if (isPayloadAdmin) {
+  if (isDashboardRoute) {
     return <>{children}</>;
   }
 

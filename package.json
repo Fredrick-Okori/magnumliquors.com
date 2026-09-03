@@ -4,21 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@payloadcms/db-sqlite": "^3.88.0",
-    "@payloadcms/next": "^3.88.0",
-    "@payloadcms/richtext-lexical": "^3.88.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
     "@vercel/speed-insights": "^2.0.0",
-    "graphql": "^16.14.2",
     "lucide-react": "^1.33.0",
     "next": "16.3.2",
-    "payload": "^3.88.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

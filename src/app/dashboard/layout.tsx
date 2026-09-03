@@ -187,13 +187,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div className="pt-4 border-t border-[#e5e5e4] mt-4">
           <Link
-            href="/admin"
+            href="/"
             target="_blank"
             className="w-full flex items-center justify-between rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] px-3.5 py-2.5 text-xs font-semibold text-[#18181b] hover:bg-[#ececec] transition"
           >
             <span className="flex items-center gap-2">
               <ShieldCheck size={15} className="text-[#b8860b]" />
-              Payload Admin
+              View Storefront
             </span>
             <ExternalLink size={13} className="text-[#71717a]" />
           </Link>

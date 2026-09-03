@@ -51,8 +51,8 @@ export default function AnalyticsPage() {
   const stats = useMemo(() => {
     const valid = orders.filter((o) => o.orderStatus !== "Cancelled");
     const grossSalesUGX = valid.reduce((sum, o) => sum + (o.totalAmountUGX || (o.totalAmountUSD * 3700)), 0);
-    const systemFeeUGX = Math.round(grossSalesUGX * 0.15);
-    const netPayoutUGX = Math.round(grossSalesUGX * 0.85);
+    const devFeeUGX = Math.round(grossSalesUGX * 0.10);
+    const netStorePayoutUGX = Math.round(grossSalesUGX * 0.90);
 
     // Spirits Category (Whiskey/Tequila/Cognac/Gin) vs Wine/Champagne vs Others
     let spiritsTotal = 0;
@@ -88,8 +88,8 @@ export default function AnalyticsPage() {
 
     return {
       grossSalesUGX,
-      systemFeeUGX,
-      netPayoutUGX,
+      devFeeUGX,
+      netStorePayoutUGX,
       spiritsTotal: Math.round(spiritsTotal),
       champagneWineTotal: Math.round(champagneWineTotal),
       othersTotal: Math.round(othersTotal),
@@ -108,7 +108,7 @@ export default function AnalyticsPage() {
         <div>
           <h1 className="text-3xl font-extrabold text-[#18181b] tracking-tight">Analytics & Revenue Reports</h1>
           <p className="text-xs text-[#71717a] mt-1">
-            Real-time sales breakdown, merchant payouts, and system commission metrics calculated from {stats.count} order transactions.
+            Real-time sales breakdown, store owner payouts, and 10% developer agreement commission calculated from {stats.count} order transactions.
           </p>
         </div>
 
@@ -124,32 +124,35 @@ export default function AnalyticsPage() {
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
-          <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Gross Sales (UGX)</p>
+          <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Gross Platform Volume (100%)</p>
           <p className="font-sans text-3xl font-extrabold tracking-tight text-[#18181b]">
             UGX {stats.grossSalesUGX.toLocaleString()}
           </p>
           <span className="inline-flex items-center gap-1 text-xs font-bold text-[#b8860b] bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 rounded-full">
-            <TrendingUp size={14} /> Live Supabase Order Calculation
+            <TrendingUp size={14} /> Total Storefront Orders
           </span>
         </div>
 
-        <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
-          <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">15% System Fee Revenue</p>
+        <div className="rounded-3xl border border-[#d4af37]/40 bg-[#fffdf5] p-6 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-[#b8860b] uppercase tracking-wider">Developer Commission (10%)</p>
+            <span className="rounded-full bg-[#b8860b] text-white text-[9px] font-extrabold px-2 py-0.5 uppercase">Agreement</span>
+          </div>
           <p className="font-sans text-3xl font-extrabold tracking-tight text-[#b8860b]">
-            UGX {stats.systemFeeUGX.toLocaleString()}
+            UGX {stats.devFeeUGX.toLocaleString()}
           </p>
           <span className="inline-flex items-center gap-1 text-xs font-bold text-[#b8860b] bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 rounded-full">
-            <TrendingUp size={14} /> Auto-deducted per order
+            <TrendingUp size={14} /> 10% End-of-Month Fee
           </span>
         </div>
 
         <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
-          <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Net Merchant Payout (85%)</p>
-          <p className="font-sans text-3xl font-extrabold tracking-tight text-neutral-800">
-            UGX {stats.netPayoutUGX.toLocaleString()}
+          <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Store Owner Net (90%)</p>
+          <p className="font-sans text-3xl font-extrabold tracking-tight text-[#16a34a]">
+            UGX {stats.netStorePayoutUGX.toLocaleString()}
           </p>
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-neutral-700 bg-neutral-100 px-2.5 py-0.5 rounded-full">
-            Ready for settlement
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#16a34a] bg-green-50 border border-green-200 px-2.5 py-0.5 rounded-full">
+            Net store revenue retained
           </span>
         </div>
       </div>

@@ -2,7 +2,7 @@
 -- MAGNUM FINE WINE & SPIRITS — COMPLETE SUPABASE POSTGRESQL SCHEMA
 -- Categories: Whiskey, Rum, Vodka, Liqueur, Gin, Tequila, Brandy, Champagne, Wine
 -- Includes: Hierarchical Categories, Subcategories, Products Table, Orders with
---           15% Commission, Stock Deduction Triggers, and Permissive RLS Policies
+--           10% Developer Agreement Commission, Expenses, Profiles, and Permissive RLS
 -- ============================================================================
 
 -- 1. EXTENSIONS
@@ -102,52 +102,48 @@ INSERT INTO public.categories (name, slug, description, parent_id, display_order
 SELECT v.name, v.slug, v.description, c.id, v.display_order
 FROM public.categories c
 CROSS JOIN (VALUES
-  ('London Dry Gin', 'london-dry-gin', 'Juniper-forward crisp classic gin style', 1),
-  ('Botanical & Floral Gin', 'botanical-floral-gin', 'Contemporary craft gins with cucumber, rose, and citrus', 2),
-  ('Old Tom & Navy Strength', 'old-tom-navy-strength', 'Slightly sweetened heritage or 57%+ high proof gin', 3),
-  ('Pink & Flavored Gin', 'pink-flavored-gin', 'Berry, rhubarb, and citrus fruit-forward gins', 4)
+  ('London Dry Gin', 'london-dry-gin', 'Classic juniper-forward crisp distilled gin', 1),
+  ('Botanical & Floral Gin', 'botanical-floral-gin', 'Infused with cucumber, rose, elderflower, and rare botanicals', 2),
+  ('Plymouth & Navy Strength', 'plymouth-navy-strength', 'Full-proof, robust character maritime gins', 3),
+  ('Old Tom & Aged Gin', 'old-tom-aged-gin', 'Slightly sweetened and barrel-aged historical gin', 4)
 ) AS v(name, slug, description, display_order)
 WHERE c.slug = 'gin'
 ON CONFLICT (slug) DO NOTHING;
 
--- Tequila Subcategories
+-- Tequila & Mezcal Subcategories
 INSERT INTO public.categories (name, slug, description, parent_id, display_order)
 SELECT v.name, v.slug, v.description, c.id, v.display_order
 FROM public.categories c
 CROSS JOIN (VALUES
-  ('Blanco / Silver', 'blanco-silver-tequila', 'Unaged, pure cooked agave and mineral crispness', 1),
-  ('Reposado', 'reposado-tequila', 'Mellowed in oak barrels for 2 to 11 months', 2),
-  ('Añejo', 'anejo-tequila', 'Deeply aged in oak for 1 to 3 years for rich vanilla notes', 3),
-  ('Extra Añejo', 'extra-anejo-tequila', 'Prestige ultra-aged tequilas aged over 3 years', 4),
-  ('Artisanal Mezcal', 'artisanal-mezcal', 'Smoky Oaxaca pit-roasted agave spirits', 5),
-  ('Cristalino', 'cristalino-tequila', 'Aged tequila filtered for crystal clarity with velvety oak depth', 6)
+  ('Blanco / Silver Tequila', 'blanco-silver-tequila', 'Unaged, pure agave sweetness and pepper notes', 1),
+  ('Reposado Tequila', 'reposado-tequila', 'Rested in oak barrels for 2-12 months', 2),
+  ('Añejo & Extra Añejo', 'anejo-extra-anejo', 'Complex vanilla, caramel and oak aged luxury tequilas', 3),
+  ('Artisanal Mezcal', 'artisanal-mezcal', 'Smoky, earthen-pit roasted wild agave spirits', 4)
 ) AS v(name, slug, description, display_order)
 WHERE c.slug = 'tequila'
 ON CONFLICT (slug) DO NOTHING;
 
--- Brandy Subcategories
+-- Brandy & Cognac Subcategories
 INSERT INTO public.categories (name, slug, description, parent_id, display_order)
 SELECT v.name, v.slug, v.description, c.id, v.display_order
 FROM public.categories c
 CROSS JOIN (VALUES
-  ('Cognac VS / VSOP', 'cognac-vs-vsop', 'French Limousin oak aged vibrant eaux-de-vie', 1),
-  ('Cognac XO & Hors d''Âge', 'cognac-xo-prestige', 'Decades-matured luxury prestige cognacs', 2),
-  ('Armagnac', 'armagnac', 'Gascony single continuous distilled rustic French brandy', 3),
-  ('Pisco & Grappa', 'pisco-grappa', 'Aromatic South American & Italian pomace brandies', 4)
+  ('VS & VSOP Cognac', 'vs-vsop-cognac', 'Vibrant fruit and warm spice French brandies', 1),
+  ('XO & Prestige Cognac', 'xo-prestige-cognac', 'Decades-old master cellar selections', 2),
+  ('Armagnac & Calvados', 'armagnac-calvados', 'Single-distilled rustic gascon spirits and normandy apple brandies', 3)
 ) AS v(name, slug, description, display_order)
 WHERE c.slug = 'brandy'
 ON CONFLICT (slug) DO NOTHING;
 
--- Champagne Subcategories
+-- Champagne & Sparkling Subcategories
 INSERT INTO public.categories (name, slug, description, parent_id, display_order)
 SELECT v.name, v.slug, v.description, c.id, v.display_order
 FROM public.categories c
 CROSS JOIN (VALUES
-  ('Brut Non-Vintage', 'brut-non-vintage', 'Classic crisp Champagne house cuvées', 1),
-  ('Blanc de Blancs', 'blanc-de-blancs', '100% Chardonnay radiant French champagne', 2),
-  ('Rosé Champagne', 'rose-champagne', 'Pinot Noir tinted delicate berry sparkling champagne', 3),
-  ('Vintage Prestige Cuvée', 'vintage-prestige-cuvee', 'Single exceptional harvest prestige releases', 4),
-  ('Prosecco & Cava', 'prosecco-cava', 'Italian Glera and Spanish traditional sparkling wines', 5)
+  ('Brut Champagne', 'brut-champagne', 'Crisp, mineral, and dry sparkling French wine', 1),
+  ('Rosé Champagne', 'rose-champagne', 'Red berry and brioche effervescence', 2),
+  ('Vintage & Prestige Cuvée', 'vintage-prestige-cuvee', 'Dom Pérignon, Cristal, and grand cru single-year vintages', 3),
+  ('Prosecco & Cava', 'prosecco-cava', 'Refreshing Italian and Spanish sparkling wines', 4)
 ) AS v(name, slug, description, display_order)
 WHERE c.slug = 'champagne'
 ON CONFLICT (slug) DO NOTHING;
@@ -165,37 +161,48 @@ CROSS JOIN (VALUES
 WHERE c.slug = 'wine'
 ON CONFLICT (slug) DO NOTHING;
 
--- 5. PRODUCTS TABLE (Directly populated via /dashboard/products/create)
+-- 5. PRODUCTS TABLE & COLUMN MIGRATIONS
 CREATE TABLE IF NOT EXISTS public.products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
-    producer VARCHAR(255) NOT NULL,
-    origin VARCHAR(255) NOT NULL,
-    category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-    category VARCHAR(100) NOT NULL DEFAULT 'Whiskey',
-    price VARCHAR(50) NOT NULL,
-    numeric_price NUMERIC(10, 2) NOT NULL,
-    old_price VARCHAR(50),
-    badge VARCHAR(100),
-    abv VARCHAR(50) NOT NULL,
-    volume VARCHAR(50) NOT NULL,
-    vintage VARCHAR(100),
-    cask VARCHAR(255),
-    rating VARCHAR(255),
-    description TEXT,
-    tasting_notes JSONB DEFAULT '{"nose": "", "palate": "", "finish": "", "pairing": ""}'::jsonb,
-    image_url TEXT NOT NULL,
-    in_stock BOOLEAN NOT NULL DEFAULT true,
-    stock_quantity INT NOT NULL DEFAULT 50,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Ensure all expected columns exist on public.products regardless of past schema state
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS name VARCHAR(255);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS producer VARCHAR(255);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS brand VARCHAR(255);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS origin VARCHAR(255);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS country_of_origin VARCHAR(255);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT 'Whiskey';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS subcategory VARCHAR(100);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS numeric_price NUMERIC(10, 2) DEFAULT 0.00;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS old_price VARCHAR(50);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS badge VARCHAR(100);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS abv NUMERIC DEFAULT 40.0;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS volume VARCHAR(50);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS volume_ml INT DEFAULT 750;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS vintage VARCHAR(100);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS cask VARCHAR(255);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS rating VARCHAR(255);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS tasting_notes JSONB DEFAULT '{"nose": "", "palate": "", "finish": "", "pairing": ""}'::jsonb;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS in_stock BOOLEAN DEFAULT true;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock_quantity INT DEFAULT 50;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS quantity_in_stock INT DEFAULT 50;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS pack_size VARCHAR(50) DEFAULT 'Bottle';
+
 CREATE INDEX IF NOT EXISTS idx_products_category ON public.products (category);
 CREATE INDEX IF NOT EXISTS idx_products_category_id ON public.products (category_id);
-CREATE INDEX IF NOT EXISTS idx_products_in_stock ON public.products (in_stock);
+CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products (is_active);
 
--- 6. ORDERS TABLE WITH 15% SYSTEM COMMISSION
+-- 6. ORDERS TABLE (10% Developer Platform Agreement Commission)
 CREATE TABLE IF NOT EXISTS public.orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_number VARCHAR(100) UNIQUE NOT NULL,
@@ -208,15 +215,22 @@ CREATE TABLE IF NOT EXISTS public.orders (
     payment_status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     total_amount_usd NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     total_amount_ugx NUMERIC(15, 2) NOT NULL DEFAULT 0.00,
-    commission_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.15,
-    system_commission_usd NUMERIC(10, 2) GENERATED ALWAYS AS (ROUND(total_amount_usd * 0.15, 2)) STORED,
-    system_commission_ugx NUMERIC(15, 2) GENERATED ALWAYS AS (ROUND(total_amount_ugx * 0.15, 2)) STORED,
-    net_payout_usd NUMERIC(10, 2) GENERATED ALWAYS AS (ROUND(total_amount_usd * 0.85, 2)) STORED,
-    net_payout_ugx NUMERIC(15, 2) GENERATED ALWAYS AS (ROUND(total_amount_ugx * 0.85, 2)) STORED,
+    commission_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.10,
     items JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total_amount_usd NUMERIC(10, 2) DEFAULT 0.00;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total_amount_ugx NUMERIC(15, 2) DEFAULT 0.00;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS commission_rate NUMERIC(5, 2) DEFAULT 0.10;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS system_commission_usd NUMERIC(10, 2) GENERATED ALWAYS AS (ROUND(total_amount_usd * 0.10, 2)) STORED;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS system_commission_ugx NUMERIC(15, 2) GENERATED ALWAYS AS (ROUND(total_amount_ugx * 0.10, 2)) STORED;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS net_payout_usd NUMERIC(10, 2) GENERATED ALWAYS AS (ROUND(total_amount_usd * 0.90, 2)) STORED;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS net_payout_ugx NUMERIC(15, 2) GENERATED ALWAYS AS (ROUND(total_amount_ugx * 0.90, 2)) STORED;
+
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON public.orders (order_number);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders (created_at);
 
 -- 7. EXPENSES TABLE (Managed directly via /dashboard/expenses)
 CREATE TABLE IF NOT EXISTS public.expenses (
@@ -238,39 +252,73 @@ CREATE TABLE IF NOT EXISTS public.expenses (
 CREATE INDEX IF NOT EXISTS idx_expenses_date ON public.expenses (date);
 CREATE INDEX IF NOT EXISTS idx_expenses_category ON public.expenses (category);
 
--- 8. ROW LEVEL SECURITY (RLS) POLICIES — PERMISSIVE FOR APP OPERATIONS
+-- 8. USER PROFILES TABLE (Mirrors Supabase Authentication Users Collection)
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY,
+    email TEXT NOT NULL,
+    full_name TEXT,
+    role VARCHAR(50) DEFAULT 'Sales',
+    phone VARCHAR(50),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 9. ROW LEVEL SECURITY (RLS) POLICIES — PERMISSIVE FOR APP OPERATIONS
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Drop prior strict policies if any
 DROP POLICY IF EXISTS "Public Read Categories" ON public.categories;
 DROP POLICY IF EXISTS "Public Manage Categories" ON public.categories;
-DROP POLICY IF EXISTS "Public Read In-Stock Products" ON public.products;
-DROP POLICY IF EXISTS "Public Manage Products" ON public.products;
-DROP POLICY IF EXISTS "Public Read Orders" ON public.orders;
-DROP POLICY IF EXISTS "Public Manage Orders" ON public.orders;
-DROP POLICY IF EXISTS "Public Read Expenses" ON public.expenses;
-DROP POLICY IF EXISTS "Public Manage Expenses" ON public.expenses;
-
--- Permissive Policies allowing Read, Insert, Update, Delete for Dashboard & Storefront
 CREATE POLICY "Public Read Categories" ON public.categories FOR SELECT USING (true);
 CREATE POLICY "Public Manage Categories" ON public.categories FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Public Read In-Stock Products" ON public.products FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public Read Products" ON public.products;
+DROP POLICY IF EXISTS "Public Manage Products" ON public.products;
+CREATE POLICY "Public Read Products" ON public.products FOR SELECT USING (true);
 CREATE POLICY "Public Manage Products" ON public.products FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read Orders" ON public.orders;
+DROP POLICY IF EXISTS "Public Manage Orders" ON public.orders;
 CREATE POLICY "Public Read Orders" ON public.orders FOR SELECT USING (true);
 CREATE POLICY "Public Manage Orders" ON public.orders FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read Expenses" ON public.expenses;
+DROP POLICY IF EXISTS "Public Manage Expenses" ON public.expenses;
 CREATE POLICY "Public Read Expenses" ON public.expenses FOR SELECT USING (true);
 CREATE POLICY "Public Manage Expenses" ON public.expenses FOR ALL USING (true) WITH CHECK (true);
 
--- Financial Ledger Policies (Allows automated trigger entries when orders are placed)
-ALTER TABLE IF EXISTS public.financial_ledger ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Public Read Ledger" ON public.financial_ledger;
-DROP POLICY IF EXISTS "Public Manage Ledger" ON public.financial_ledger;
-CREATE POLICY "Public Read Ledger" ON public.financial_ledger FOR SELECT USING (true);
-CREATE POLICY "Public Manage Ledger" ON public.financial_ledger FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Public Read Profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Public Manage Profiles" ON public.profiles;
+CREATE POLICY "Public Read Profiles" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Public Manage Profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
 
+-- 10. AUTOMATIC TRIGGER TO SYNC AUTH.USERS DIRECTLY INTO PUBLIC.PROFILES
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, role, phone)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'full_name',
+    COALESCE(NEW.raw_user_meta_data->>'role', 'Sales'),
+    NEW.raw_user_meta_data->>'phone'
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    phone = EXCLUDED.phone,
+    updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT OR UPDATE ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     const grossUSD = Number(body.totalAmountUSD || 0);
     const grossUGX = Number(body.totalAmountUGX || 0);
-    const commRate = Number(body.commissionRate || 0.15);
+    const commRate = Number(body.commissionRate || 0.10);
     const sysCommUSD = body.systemCommissionUSD ?? Number((grossUSD * commRate).toFixed(2));
     const sysCommUGX = body.systemCommissionUGX ?? Math.round(grossUGX * commRate);
     const netPayoutUSD = body.netPayoutUSD ?? Number((grossUSD * (1 - commRate)).toFixed(2));

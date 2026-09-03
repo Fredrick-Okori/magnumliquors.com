@@ -122,7 +122,7 @@ export async function signOutManagerFromSupabase() {
  */
 export async function saveOrderToSupabase(orderData: SupabaseOrder) {
   try {
-    const commissionRate = orderData.commission_rate ?? 0.15;
+    const commissionRate = orderData.commission_rate ?? 0.10;
 
     // Only pass non-generated columns to Supabase
     const payloadToSave = {

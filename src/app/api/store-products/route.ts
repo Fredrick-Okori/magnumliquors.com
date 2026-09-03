@@ -9,7 +9,7 @@ import {
   parseAbvNumeric,
   SupabaseProductRow,
 } from "@/lib/supabase";
-import { Product } from "@/data/products";
+import { Product, products as fallbackCatalog } from "@/data/products";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +50,25 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json(mappedList);
+    // Merge with fallback catalog so all categories are fully stocked
+    const existingNames = new Set(mappedList.map((p) => p.name.toLowerCase()));
+    const finalProducts = [
+      ...mappedList,
+      ...fallbackCatalog.filter((fp) => !existingNames.has(fp.name.toLowerCase())),
+    ];
+
+    return NextResponse.json(finalProducts, {
+      headers: {
+        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=59",
+      },
+    });
   } catch (error) {
-    console.error("GET store-products Supabase error:", error);
-    return NextResponse.json([], { status: 500 });
+    console.error("GET store-products error:", error);
+    return NextResponse.json(fallbackCatalog, {
+      headers: {
+        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=59",
+      },
+    });
   }
 }
 

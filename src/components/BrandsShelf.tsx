@@ -59,23 +59,19 @@ export function BrandsShelf() {
           </h2>
         </div>
 
-        {/* Larger Brand Logos Grid (No Subtitles) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 lg:gap-14 items-center justify-items-center">
+        {/* Flat Brand Logos Grid (No Card Borders or Zoom Effect) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 lg:gap-12 items-center justify-items-center">
           {brandLogos.map((brand) => (
             <div
               key={brand.name}
-              className={`group flex h-36 sm:h-44 w-full max-w-[240px] items-center justify-center rounded-2xl p-6 transition-all duration-300 hover:scale-105 ${
-                isDark
-                  ? "bg-[#14120f]/60 hover:bg-[#1a1713] border border-white/5"
-                  : "bg-neutral-50/70 hover:bg-neutral-100/80 border border-neutral-100"
-              }`}
+              className="flex h-24 sm:h-28 w-full max-w-[200px] items-center justify-center p-2"
             >
-              {/* Large Full-Color SVG Logo */}
-              <div className="relative flex h-28 sm:h-36 w-full items-center justify-center">
+              {/* Clean SVG Logo */}
+              <div className="relative flex h-full w-full items-center justify-center">
                 <img
                   src={brand.logo}
                   alt={brand.name}
-                  className="max-h-24 sm:max-h-28 max-w-full object-contain transition-transform duration-300 group-hover:scale-105 brightness-100 contrast-105"
+                  className="max-h-16 sm:max-h-20 max-w-full object-contain"
                 />
               </div>
             </div>

@@ -245,11 +245,11 @@ export default function OrdersPage() {
                   <span className="font-sans text-sm font-extrabold text-[#b8860b] tracking-tight">
                     Total: {formatAmount(order.totalAmountUSD)}
                   </span>
-                  <span className="text-neutral-500 text-[10px] font-sans">
-                    15% System Fee: UGX {order.systemCommissionUGX?.toLocaleString()}
+                  <span className="text-[#b8860b] text-[10px] font-sans font-bold bg-[#fffcf0] border border-[#f3e5b8] px-2 py-0.5 rounded-full">
+                    10% Dev Fee: UGX {Math.round((order.totalAmountUGX || order.totalAmountUSD * 3700) * 0.10).toLocaleString()}
                   </span>
-                  <span className="text-neutral-700 text-[10px] font-sans">
-                    Net Payout: UGX {order.netPayoutUGX?.toLocaleString()}
+                  <span className="text-[#16a34a] text-[10px] font-sans font-bold bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                    90% Store Net: UGX {Math.round((order.totalAmountUGX || order.totalAmountUSD * 3700) * 0.90).toLocaleString()}
                   </span>
                 </div>
               </div>

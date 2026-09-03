@@ -1,15 +1,5 @@
-import { withPayload } from "@payloadcms/next/withPayload";
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  serverExternalPackages: [
-    "@payloadcms/db-sqlite",
-    "@esbuild/darwin-x64",
-    "@esbuild/darwin-arm64",
-    "better-sqlite3",
-    "@libsql/client",
-    "esbuild",
-  ],
-};
+const nextConfig: NextConfig = {};
 
-export default withPayload(nextConfig);
+export default nextConfig;

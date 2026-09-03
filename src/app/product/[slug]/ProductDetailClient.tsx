@@ -200,12 +200,28 @@ export default function ProductDetailClient({
                 <Heart size={18} />
               </button>
 
-              {/* Product Image */}
-              <img
-                src={product.image}
-                alt={product.name}
-                className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-              />
+              {/* Product Media (Video or Image) */}
+              {product.image?.startsWith("data:video") ||
+              product.image?.endsWith(".mp4") ||
+              product.image?.endsWith(".webm") ||
+              product.image?.endsWith(".mov") ||
+              product.image?.endsWith(".m4v") ? (
+                <video
+                  src={product.image}
+                  controls
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="h-full w-full object-contain bg-black"
+                />
+              ) : (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                />
+              )}
             </div>
 
             {/* Quick Guarantees Strip */}

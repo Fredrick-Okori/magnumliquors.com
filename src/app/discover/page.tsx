@@ -428,11 +428,26 @@ function DiscoverContent() {
                       </div>
                     </div>
 
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                    {product.image?.startsWith("data:video") ||
+                    product.image?.endsWith(".mp4") ||
+                    product.image?.endsWith(".webm") ||
+                    product.image?.endsWith(".mov") ||
+                    product.image?.endsWith(".m4v") ? (
+                      <video
+                        src={product.image}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
                   </Link>
 
                   {/* Product Meta & Information */}

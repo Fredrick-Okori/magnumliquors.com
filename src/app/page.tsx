@@ -218,12 +218,27 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Edge-to-Edge Sleek Image Fill */}
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  {/* Edge-to-Edge Sleek Image / Video Fill */}
+                  {product.image?.startsWith("data:video") ||
+                  product.image?.endsWith(".mp4") ||
+                  product.image?.endsWith(".webm") ||
+                  product.image?.endsWith(".mov") ||
+                  product.image?.endsWith(".m4v") ? (
+                    <video
+                      src={product.image}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
                 </Link>
 
                 {/* Bottom Row: Producer, Title & Price */}

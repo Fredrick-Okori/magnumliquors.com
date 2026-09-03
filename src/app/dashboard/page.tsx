@@ -6,6 +6,8 @@ import {
   ArrowRight,
   ArrowUpRight,
   Calendar,
+  Code2,
+  Coins,
   CreditCard,
   DollarSign,
   FileText,
@@ -14,6 +16,7 @@ import {
   Printer,
   RefreshCw,
   Search,
+  ShieldCheck,
   Tag,
   TrendingUp,
   Wine,
@@ -162,6 +165,7 @@ export default function DashboardOverviewPage() {
   const { formatAmount } = useCurrency();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [productsList, setProductsList] = useState<Product[]>(fallbackProducts);
+  const [teamMembersList, setTeamMembersList] = useState<Array<{ id: string; name: string; role: string }>>([]);
   const [selectedEmployee, setSelectedEmployee] = useState("All Employees");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -172,10 +176,18 @@ export default function DashboardOverviewPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const prodRes = await fetch("/api/store-products");
+      const [prodRes, teamRes] = await Promise.all([
+        fetch("/api/store-products"),
+        fetch("/api/team/users"),
+      ]);
       const prodData = await prodRes.json();
+      const teamData = await teamRes.json();
+
       if (Array.isArray(prodData) && prodData.length > 0) {
         setProductsList(prodData);
+      }
+      if (Array.isArray(teamData)) {
+        setTeamMembersList(teamData);
       }
 
       let fetchedOrders: Order[] = [];
@@ -273,16 +285,27 @@ export default function DashboardOverviewPage() {
       .filter((o) => o.paymentStatus === "Paid" || o.orderStatus === "Delivered")
       .reduce((sum, o) => sum + (o.totalAmountUGX || o.totalAmountUSD * 3700), 0);
 
-    // 15% System Fee Platform Commission (UGX)
-    const expensesUGX = Math.round(totalSalesUGX * 0.15);
-
+    // 10% Developer Platform Agreement Commission (UGX)
+    const developerCommissionRate = 0.10;
+    const developerCommissionUGX = Math.round(totalSalesUGX * developerCommissionRate);
+    const developerCommissionUSD = Number(((totalSalesUGX * developerCommissionRate) / 3700).toFixed(2));
+    
+    // Developer Commission on collected funds vs pending invoices
+    const developerPaidCommissionUGX = Math.round(totalReceivedUGX * developerCommissionRate);
+    
     // Uncollected Invoices / Pending Orders (UGX)
     const invoicesUGX = validOrders
       .filter((o) => o.paymentStatus === "Pending" && o.orderStatus !== "Delivered")
       .reduce((sum, o) => sum + (o.totalAmountUGX || o.totalAmountUSD * 3700), 0);
 
-    // Net Liquid Cash at Hand (Total Received minus system fee portion)
-    const cashAtHandUGX = Math.max(0, totalReceivedUGX - Math.round(totalReceivedUGX * 0.15));
+    const developerPendingCommissionUGX = Math.round(invoicesUGX * developerCommissionRate);
+
+    // Store Owner Net Revenue (90%)
+    const storeNetPayoutUGX = Math.round(totalSalesUGX * (1 - developerCommissionRate));
+    const storeNetReceivedUGX = Math.round(totalReceivedUGX * (1 - developerCommissionRate));
+
+    // Net Liquid Cash at Hand (Total Received minus developer 10% share)
+    const cashAtHandUGX = Math.max(0, totalReceivedUGX - developerPaidCommissionUGX);
 
     // Payment Breakdown by Payment Method
     const airtelUGX = validOrders
@@ -313,7 +336,13 @@ export default function DashboardOverviewPage() {
     return {
       totalSalesUGX,
       totalReceivedUGX,
-      expensesUGX,
+      developerCommissionRate,
+      developerCommissionUGX,
+      developerCommissionUSD,
+      developerPaidCommissionUGX,
+      developerPendingCommissionUGX,
+      storeNetPayoutUGX,
+      storeNetReceivedUGX,
       invoicesUGX,
       cashAtHandUGX,
       airtelUGX,
@@ -328,78 +357,62 @@ export default function DashboardOverviewPage() {
     <div className="space-y-6">
       
       {/* TOP FILTER CARD (Employee, From Date, To Date, Quick Pills) */}
-      <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 space-y-4 shadow-2xs">
-        <div className="flex items-center justify-between border-b border-[#f4f4f3] pb-3">
-          <div>
-            <h1 className="text-2xl font-extrabold text-[#18181b] tracking-tight">Dashboard Overview</h1>
-            <p className="text-xs text-[#71717a] mt-0.5">
-              Live cellar financial metrics calculated directly from {finances.orderCount} order transactions
-            </p>
-          </div>
-
-          <button
-            onClick={fetchData}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 rounded-full border border-[#e5e5e4] bg-[#f7f7f6] px-4 py-2 text-xs font-semibold text-[#18181b] hover:bg-[#ececec] transition shadow-2xs"
-          >
-            <RefreshCw size={13} className={isLoading ? "animate-spin text-[#b8860b]" : "text-[#71717a]"} /> Sync
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          
-          {/* Employee Dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#52525b] block">Employee</label>
+      <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-bold text-[#18181b] whitespace-nowrap">Employee Name:</label>
             <select
               value={selectedEmployee}
               onChange={(e) => setSelectedEmployee(e.target.value)}
-              className="w-full h-11 rounded-2xl border border-[#e5e5e4] bg-white px-4 text-xs text-[#18181b] font-semibold outline-none focus:border-[#b8860b] transition shadow-2xs"
+              className="rounded-full border border-[#e5e5e4] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#18181b] outline-none focus:border-[#b8860b]"
             >
               <option>All Employees</option>
-              <option>Jessin Sam (Store Manager)</option>
-              <option>Isaac Kato (Cellar Master)</option>
-              <option>Brenda Namuli (Inventory)</option>
+              {teamMembersList.map((t) => (
+                <option key={t.id} value={t.name}>
+                  {t.name} ({t.role})
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* From Date Picker */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#52525b] block">From</label>
-            <div className="relative flex items-center">
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  setQuickDateFilter("all");
-                }}
-                className="w-full h-11 rounded-2xl border border-[#e5e5e4] bg-white pl-4 pr-10 text-xs font-mono font-semibold text-[#18181b] outline-none focus:border-[#b8860b] transition shadow-2xs"
-              />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-bold text-[#18181b]">From:</label>
+              <div className="relative flex items-center">
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="rounded-full border border-[#e5e5e4] bg-white px-3 py-1.5 text-xs font-semibold text-[#18181b] outline-none focus:border-[#b8860b]"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* To Date Picker */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#52525b] block">To</label>
-            <div className="relative flex items-center">
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => {
-                  setToDate(e.target.value);
-                  setQuickDateFilter("all");
-                }}
-                className="w-full h-11 rounded-2xl border border-[#e5e5e4] bg-white pl-4 pr-10 text-xs font-mono font-semibold text-[#18181b] outline-none focus:border-[#b8860b] transition shadow-2xs"
-              />
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-bold text-[#18181b]">To:</label>
+              <div className="relative flex items-center">
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="rounded-full border border-[#e5e5e4] bg-white px-3 py-1.5 text-xs font-semibold text-[#18181b] outline-none focus:border-[#b8860b]"
+                />
+              </div>
             </div>
-          </div>
 
+            <button
+              onClick={fetchData}
+              disabled={isLoading}
+              className="rounded-full bg-[#b8860b] hover:bg-[#996515] px-4 py-1.5 text-xs font-bold text-white transition flex items-center gap-1.5 shadow-2xs"
+            >
+              <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} /> Apply
+            </button>
+          </div>
         </div>
 
-        {/* Quick Date Pills */}
-        <div className="flex items-center gap-2 pt-2 border-t border-[#f4f4f3]">
-          <span className="text-xs font-bold text-[#8e8e8e] mr-2">Quick:</span>
+        {/* Quick Date Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#f4f4f3]">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#8e8e8e] mr-2">Quick Range:</span>
           {[
             { id: "all", label: "All Time" },
             { id: "today", label: "Today" },
@@ -408,10 +421,14 @@ export default function DashboardOverviewPage() {
           ].map((pill) => (
             <button
               key={pill.id}
-              onClick={() => setQuickDateFilter(pill.id as any)}
-              className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+              onClick={() => {
+                setQuickDateFilter(pill.id as any);
+                setFromDate("");
+                setToDate("");
+              }}
+              className={`rounded-full px-3.5 py-1 text-xs font-bold transition ${
                 quickDateFilter === pill.id
-                  ? "bg-[#e8e8e7] text-[#18181b]"
+                  ? "bg-[#b8860b] text-white shadow-2xs"
                   : "bg-[#f4f4f3] text-[#71717a] hover:bg-[#e8e8e7]"
               }`}
             >
@@ -424,13 +441,13 @@ export default function DashboardOverviewPage() {
       {/* 5 PRIMARY FINANCIAL METRICS ROW (Calculated dynamically) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         
-        {/* Total Sales */}
+        {/* 1. Total Sales (100%) */}
         <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
             <TrendingUp size={20} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold text-[#71717a] block">Total Sales</span>
+            <span className="text-[11px] font-semibold text-[#71717a] block">Gross Sales (100%)</span>
             <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
               {finances.totalSalesUGX.toLocaleString()}
             </p>
@@ -438,7 +455,7 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* Total Received */}
+        {/* 2. Total Received */}
         <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
             <CreditCard size={20} />
@@ -452,21 +469,43 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* Expenses (15% System Commission) */}
-        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#dc2626] text-white flex items-center justify-center shadow-xs">
-            <Tag size={20} />
+        {/* 3. Developer Commission (10% Platform Fee) */}
+        <div className="rounded-2xl border border-[#d4af37]/40 bg-[#fffdf5] p-5 flex items-center gap-4 shadow-xs relative overflow-hidden">
+          <div className="absolute top-2 right-2.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#b8860b] text-white px-2 py-0.5 text-[9px] font-extrabold tracking-wide uppercase shadow-2xs">
+              Agreement 10%
+            </span>
+          </div>
+          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
+            <Code2 size={20} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold text-[#71717a] block">Expenses (15%)</span>
+            <span className="text-[11px] font-bold text-[#b8860b] block">Dev Commission (10%)</span>
             <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-              {finances.expensesUGX.toLocaleString()}
+              {finances.developerCommissionUGX.toLocaleString()}
+            </p>
+            <div className="flex items-center gap-1 text-[10px] text-[#71717a] font-sans">
+              <span className="font-bold uppercase tracking-wider text-[#b8860b]">UGX</span>
+              <span>• ≈ ${finances.developerCommissionUSD.toLocaleString()} USD</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. Store Owner Revenue (90% Net) */}
+        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
+            <Coins size={20} />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-[#71717a] block">Store Net (90%)</span>
+            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+              {finances.storeNetPayoutUGX.toLocaleString()}
             </p>
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
           </div>
         </div>
 
-        {/* Invoices (Pending Accounts) */}
+        {/* 5. Invoices (Pending Accounts) */}
         <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-xs">
             <FileText size={20} />
@@ -480,20 +519,79 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* Cash at Hand (Net Liquid) */}
-        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#996515] text-white flex items-center justify-center shadow-xs">
-            <DollarSign size={20} />
+      </div>
+
+      {/* DEVELOPER AGREEMENT & MONTH-END SETTLEMENT CARD */}
+      <div className="rounded-3xl border border-[#d4af37]/30 bg-gradient-to-br from-[#fffdfa] to-[#faf6ed] p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ebdcb2]/60 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+              <Code2 size={20} />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-[#18181b] tracking-tight">
+                Developer Platform Commission & Settlement Breakdown
+              </h3>
+              <p className="text-xs text-[#71717a] mt-0.5">
+                Agreement terms: <span className="font-bold text-[#b8860b]">10.0% fixed commission</span> on all platform gross sales and completed orders.
+              </p>
+            </div>
           </div>
-          <div>
-            <span className="text-[11px] font-semibold text-[#71717a] block">Cash at Hand</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-              {finances.cashAtHandUGX.toLocaleString()}
-            </p>
-            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fffcf0] border border-[#f3e5b8] px-3.5 py-1 text-xs font-bold text-[#b8860b]">
+              <ShieldCheck size={14} className="text-[#b8860b]" /> End-of-Month Settlement
+            </span>
           </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
+          <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
+            <p className="text-[11px] font-bold text-[#71717a] uppercase tracking-wider">Gross Platform Volume</p>
+            <p className="font-sans text-xl font-extrabold text-[#18181b]">
+              UGX {finances.totalSalesUGX.toLocaleString()}
+            </p>
+            <p className="text-[10px] text-[#71717a]">100% of order totals across {finances.orderCount} orders</p>
+          </div>
+
+          <div className="rounded-2xl bg-[#fffcf0] p-4 border border-[#f3e5b8] space-y-1 shadow-2xs">
+            <p className="text-[11px] font-bold text-[#b8860b] uppercase tracking-wider">Developer 10% Fee</p>
+            <p className="font-sans text-xl font-extrabold text-[#b8860b]">
+              UGX {finances.developerCommissionUGX.toLocaleString()}
+            </p>
+            <p className="text-[10px] text-[#854d0e] font-semibold">Total payout due to developer</p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
+            <p className="text-[11px] font-bold text-[#16a34a] uppercase tracking-wider">Collected / Cleared Share</p>
+            <p className="font-sans text-xl font-extrabold text-[#16a34a]">
+              UGX {finances.developerPaidCommissionUGX.toLocaleString()}
+            </p>
+            <p className="text-[10px] text-[#71717a]">10% fee from already paid/delivered sales</p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
+            <p className="text-[11px] font-bold text-[#18181b] uppercase tracking-wider">Store Net Retained (90%)</p>
+            <p className="font-sans text-xl font-extrabold text-[#18181b]">
+              UGX {finances.storeNetPayoutUGX.toLocaleString()}
+            </p>
+            <p className="text-[10px] text-[#71717a]">Net revenue retained by Magnum owners</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-white/70 border border-[#ebdcb2]/60 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs font-extrabold bg-[#f4f4f3] px-2 py-0.5 rounded border border-[#e4e4e7] text-[#18181b]">
+              FORMULA: Total Sales × 0.10
+            </span>
+            <span className="text-[#71717a]">
+              Calculation automatically updates as customers place orders on the storefront.
+            </span>
+          </div>
+          <div className="font-sans font-bold text-[#18181b] text-xs">
+            Pending Collection: <span className="text-[#d97706]">UGX {finances.developerPendingCommissionUGX.toLocaleString()}</span>
+          </div>
+        </div>
       </div>
 
       {/* PAYMENT BREAKDOWN SECTION (Calculated dynamically) */}
