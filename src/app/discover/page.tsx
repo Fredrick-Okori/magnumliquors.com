@@ -64,6 +64,7 @@ function DiscoverContent() {
   const { formatAmount } = useCurrency();
   const [addedProduct, setAddedProduct] = useState<string | null>(null);
   const [productList, setProductList] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (categoryParam) {
@@ -72,6 +73,7 @@ function DiscoverContent() {
   }, [categoryParam]);
 
   useEffect(() => {
+    setIsLoading(true);
     fetch("/api/store-products")
       .then((res) => res.json())
       .then((data) => {
@@ -94,7 +96,8 @@ function DiscoverContent() {
 
         setProductList(combined);
       })
-      .catch((err) => console.warn("Failed to load store products:", err));
+      .catch((err) => console.warn("Failed to load store products:", err))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const handleAddToCart = (product: Product) => {
@@ -398,105 +401,129 @@ function DiscoverContent() {
               </div>
             </div>
 
-            {/* Product Cards Grid */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProducts.map((product) => (
-                <article
-                  key={product.id}
-                  className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                >
-                  {/* Product Image Container */}
-                  <Link
-                    href={productHref(product)}
-                    className="relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]"
+            {/* Product Cards Grid / Skeletons */}
+            {isLoading ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white/90 p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] animate-pulse"
                   >
-                    {/* Floating Upper Badge & Circular Arrow */}
-                    <div className="absolute left-3.5 top-3.5 right-3.5 z-10 flex items-center justify-between pointer-events-none">
-                      {product.badge ? (
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f3e5b8]/90 bg-[#fffcf0]/90 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-[#b8860b] shadow-xs">
-                          <CheckCircle2 size={13} className="text-[#d4af37]" />
-                          <span>{product.badge}</span>
-                        </div>
-                      ) : (
-                        <div />
-                      )}
-
-                      <div
-                        className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-neutral-800 shadow-sm transition-all duration-300 group-hover:bg-neutral-900 group-hover:text-white"
-                      >
-                        <ArrowUpRight size={16} />
-                      </div>
+                    <div className="relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl bg-neutral-100">
+                      <div className="absolute left-3.5 top-3.5 h-6 w-24 rounded-full bg-neutral-200" />
+                      <div className="absolute right-3.5 top-3.5 h-9 w-9 rounded-full bg-neutral-200" />
                     </div>
-
-                    {product.image?.startsWith("data:video") ||
-                    product.image?.endsWith(".mp4") ||
-                    product.image?.endsWith(".webm") ||
-                    product.image?.endsWith(".mov") ||
-                    product.image?.endsWith(".m4v") ? (
-                      <video
-                        src={product.image}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    )}
-                  </Link>
-
-                  {/* Product Meta & Information */}
-                  <div className="mt-4 flex flex-col justify-between flex-1">
-                    <div>
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8e8e8e]">
-                        {product.producer} • {product.origin}
-                      </span>
-                      <h3 className="font-serif text-lg font-bold text-neutral-900 mt-1 line-clamp-1">
-                        <Link href={productHref(product)} className="hover:text-[#b8860b] transition">
-                          {product.name}
-                        </Link>
-                      </h3>
-                      <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-1 font-light">
-                        <span>{product.volume}</span>
-                        <span>•</span>
-                        <span>{product.abv}</span>
+                    <div className="mt-4 flex flex-col justify-between flex-1 space-y-3">
+                      <div className="space-y-2">
+                        <div className="h-3 w-28 rounded-md bg-neutral-200" />
+                        <div className="h-5 w-44 rounded-md bg-neutral-300" />
+                        <div className="h-3 w-20 rounded-md bg-neutral-200" />
                       </div>
-                    </div>
-
-                    {/* Price & Add to Cart Action */}
-                    <div className="mt-4 flex items-end justify-between border-t border-neutral-100 pt-3">
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-neutral-400">Price</span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="font-sans text-sm sm:text-base font-bold tracking-tight text-neutral-900">
-                            {formatAmount(product.numericPrice)}
-                          </span>
-                        </div>
+                      <div className="flex items-end justify-between border-t border-neutral-100 pt-3">
+                        <div className="h-4 w-16 rounded-md bg-neutral-300" />
+                        <div className="h-3 w-10 rounded-md bg-neutral-200" />
                       </div>
-
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleAddToCart(product);
-                          openCart();
-                        }}
-                        className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-neutral-600 hover:text-neutral-900 transition"
-                      >
-                        <span>{addedProduct === product.id ? "Added ✓" : "+ Add"}</span>
-                      </button>
                     </div>
                   </div>
-                </article>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredProducts.map((product) => (
+                  <article
+                    key={product.id}
+                    className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  >
+                    {/* Product Image Container */}
+                    <Link
+                      href={productHref(product)}
+                      className="relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]"
+                    >
+                      {/* Floating Upper Badge & Circular Arrow */}
+                      <div className="absolute left-3.5 top-3.5 right-3.5 z-10 flex items-center justify-between pointer-events-none">
+                        {product.badge ? (
+                          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f3e5b8]/90 bg-[#fffcf0]/90 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-[#b8860b] shadow-xs">
+                            <CheckCircle2 size={13} className="text-[#d4af37]" />
+                            <span>{product.badge}</span>
+                          </div>
+                        ) : (
+                          <div />
+                        )}
 
-            {/* Empty State when no bottles match filters */}
-            {filteredProducts.length === 0 && (
+                        <div
+                          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-neutral-800 shadow-sm transition-all duration-300 group-hover:bg-neutral-900 group-hover:text-white"
+                        >
+                          <ArrowUpRight size={16} />
+                        </div>
+                      </div>
+
+                      {product.image?.startsWith("data:video") ||
+                      product.image?.endsWith(".mp4") ||
+                      product.image?.endsWith(".webm") ||
+                      product.image?.endsWith(".mov") ||
+                      product.image?.endsWith(".m4v") ? (
+                        <video
+                          src={product.image}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      )}
+                    </Link>
+
+                    {/* Product Meta & Information */}
+                    <div className="mt-4 flex flex-col justify-between flex-1">
+                      <div>
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8e8e8e]">
+                          {product.producer} • {product.origin}
+                        </span>
+                        <h3 className="font-serif text-lg font-bold text-neutral-900 mt-1 line-clamp-1">
+                          <Link href={productHref(product)} className="hover:text-[#b8860b] transition">
+                            {product.name}
+                          </Link>
+                        </h3>
+                        <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-1 font-light">
+                          <span>{product.volume}</span>
+                          <span>•</span>
+                          <span>{product.abv}</span>
+                        </div>
+                      </div>
+
+                      {/* Price & Add to Cart Action */}
+                      <div className="mt-4 flex items-end justify-between border-t border-neutral-100 pt-3">
+                        <div>
+                          <span className="text-[10px] uppercase tracking-wider text-neutral-400">Price</span>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-sans text-sm sm:text-base font-bold tracking-tight text-neutral-900">
+                              {formatAmount(product.numericPrice)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleAddToCart(product);
+                            openCart();
+                          }}
+                          className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-neutral-600 hover:text-neutral-900 transition"
+                        >
+                          <span>{addedProduct === product.id ? "Added ✓" : "+ Add"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
               <div className="py-24 text-center rounded-3xl border border-neutral-200/80 bg-white p-8 space-y-4">
                 <p className="font-serif text-3xl text-neutral-600">
                   No bottles match your active filters.
