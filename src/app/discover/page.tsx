@@ -22,6 +22,7 @@ import {
 import { useCart } from "@/components/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { Product, productHref } from "@/data/products";
+import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
 const categories = [
   { name: "All", icon: LayoutGrid },
@@ -457,18 +458,14 @@ function DiscoverContent() {
                         </div>
                       </div>
 
-                      {product.image?.startsWith("data:video") ||
-                      product.image?.endsWith(".mp4") ||
-                      product.image?.endsWith(".webm") ||
-                      product.image?.endsWith(".mov") ||
-                      product.image?.endsWith(".m4v") ? (
-                        <video
+                      {isVideoMedia(product.image) ? (
+                        <FastVideo
                           src={product.image}
                           autoPlay
                           loop
                           muted
-                          playsInline
-                          className="h-full w-full object-cover"
+                          objectFit="cover"
+                          className="h-full w-full"
                         />
                       ) : (
                         <img

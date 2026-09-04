@@ -26,6 +26,7 @@ import {
   getProductBySlug,
   productHref,
 } from "@/data/products";
+import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
 interface ProductDetailClientProps {
   initialSlug?: string;
@@ -201,19 +202,16 @@ export default function ProductDetailClient({
               </button>
 
               {/* Product Media (Video or Image) */}
-              {product.image?.startsWith("data:video") ||
-              product.image?.endsWith(".mp4") ||
-              product.image?.endsWith(".webm") ||
-              product.image?.endsWith(".mov") ||
-              product.image?.endsWith(".m4v") ? (
-                <video
+              {isVideoMedia(product.image) ? (
+                <FastVideo
                   src={product.image}
+                  priority
                   controls
                   autoPlay
                   loop
                   muted
-                  playsInline
-                  className="h-full w-full object-contain bg-black"
+                  objectFit="contain"
+                  className="bg-black/90"
                 />
               ) : (
                 <img

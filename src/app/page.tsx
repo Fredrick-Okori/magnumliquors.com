@@ -20,6 +20,7 @@ import { useCart } from "@/components/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useTheme } from "@/context/ThemeContext";
 import { products, Product, productHref } from "@/data/products";
+import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
 const categories = [
   { name: "All bottles", icon: LayoutGrid },
@@ -256,19 +257,15 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Edge-to-Edge Sleek Image / Video Fill */}
-                    {product.image?.startsWith("data:video") ||
-                    product.image?.endsWith(".mp4") ||
-                    product.image?.endsWith(".webm") ||
-                    product.image?.endsWith(".mov") ||
-                    product.image?.endsWith(".m4v") ? (
-                      <video
+                    {/* Edge-to-Edge Sleek Image / Fast Video Fill */}
+                    {isVideoMedia(product.image) ? (
+                      <FastVideo
                         src={product.image}
                         autoPlay
                         loop
                         muted
-                        playsInline
-                        className="h-full w-full object-cover"
+                        objectFit="cover"
+                        className="h-full w-full"
                       />
                     ) : (
                       <img
