@@ -49,7 +49,7 @@ export function Navbar({
           MAGNUM<span className="text-[#b8860b]">.</span>
         </Link>
 
-        {/* Main Navigation Links (Including Cart Nav Item) */}
+        {/* Main Navigation Links (Including Cart Nav Page Link) */}
         <nav
           className={`${
             menuOpen ? "flex" : "hidden"
@@ -95,13 +95,10 @@ export function Navbar({
             Our story
           </Link>
 
-          {/* CART NAV ITEM */}
-          <button
-            type="button"
-            onClick={() => {
-              setMenuOpen(false);
-              if (onCartClick) onCartClick();
-            }}
+          {/* CART NAV ITEM (Navigates to /cart) */}
+          <Link
+            href="/cart"
+            onClick={() => setMenuOpen(false)}
             className="group inline-flex items-center gap-2 font-bold uppercase tracking-[0.18em] hover:text-[#b8860b] transition text-left"
           >
             <ShoppingBag size={15} className="text-[#b8860b] group-hover:scale-110 transition-transform" />
@@ -115,10 +112,10 @@ export function Navbar({
                 (0)
               </span>
             )}
-          </button>
+          </Link>
         </nav>
 
-        {/* Right Controls: Currency Switcher, Theme Switcher & Quick Cart Icon */}
+        {/* Right Controls: Currency Switcher, Theme Switcher & Quick Cart Page Link */}
         <div className="flex items-center gap-3">
           {/* Currency Switcher (UGX / USD) */}
           <CurrencySwitcher />
@@ -126,10 +123,10 @@ export function Navbar({
           {/* Theme Switcher Control */}
           <ThemeSwitcher />
 
-          {/* Quick Cart Pill Button */}
-          <button
-            aria-label="Shopping cart"
-            onClick={onCartClick}
+          {/* Quick Cart Pill Button (Navigates to /cart) */}
+          <Link
+            href="/cart"
+            aria-label="Shopping cart page"
             className={`relative flex h-10 items-center gap-2 rounded-full border px-3 text-xs font-bold transition shadow-2xs ${
               isDark
                 ? "border-white/10 bg-[#161310] text-white hover:border-[#b8860b]/40 hover:bg-[#1f1b16]"
@@ -143,7 +140,7 @@ export function Navbar({
                 {cartCount}
               </span>
             )}
-          </button>
+          </Link>
         </div>
       </div>
     </header>

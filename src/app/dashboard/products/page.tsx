@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Product } from "@/data/products";
 import { useCurrency } from "@/context/CurrencyContext";
+import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
 const DELETED_IDS_KEY = "magnum_deleted_product_ids";
 
@@ -217,7 +218,18 @@ export default function ProductsPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-neutral-100 bg-[#faf8f5] p-2 flex items-center justify-center">
-                  <img src={p.image} alt={p.name} className="h-full w-full object-contain" />
+                  {isVideoMedia(p.image) ? (
+                    <FastVideo
+                      src={p.image}
+                      autoPlay
+                      loop
+                      muted
+                      objectFit="contain"
+                      className="h-full w-full rounded-xl"
+                    />
+                  ) : (
+                    <img src={p.image} alt={p.name} className="h-full w-full object-contain" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="inline-block rounded-full bg-[#f4f4f3] px-2.5 py-0.5 text-[10px] font-bold text-[#71717a] uppercase tracking-wider">

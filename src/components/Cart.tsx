@@ -31,6 +31,7 @@ import {
 import { useCart } from "./CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useTheme } from "@/context/ThemeContext";
+import { FastVideo, isVideoMedia } from "./FastVideo";
 
 const FREE_DELIVERY_THRESHOLD_USD = 150;
 
@@ -404,17 +405,28 @@ export function Cart({
                         : "border-neutral-200/80 bg-white hover:border-neutral-300 shadow-xs"
                     }`}
                   >
-                    {/* Bottle Thumbnail */}
+                    {/* Bottle Thumbnail (Image or Video) */}
                     <div
                       className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border p-2 flex items-center justify-center ${
                         isDark ? "border-white/10 bg-[#0c0a08]" : "border-neutral-100 bg-neutral-50"
                       }`}
                     >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-                      />
+                      {isVideoMedia(item.image) ? (
+                        <FastVideo
+                          src={item.image}
+                          autoPlay
+                          loop
+                          muted
+                          objectFit="contain"
+                          className="h-full w-full rounded-xl"
+                        />
+                      ) : (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        />
+                      )}
                     </div>
 
                     {/* Bottle Info */}

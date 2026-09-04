@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { products, Product } from "@/data/products";
 
 export interface CartItem {
@@ -33,6 +34,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -62,21 +64,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           quantity: updated[existingIndex].quantity + quantityToAdd,
         };
         return updated;
-      } else {
-        return [
-          ...prevItems,
-          {
-            id: targetId,
-            name,
-            producer,
-            price,
-            numericPrice,
-            image,
-            quantity: quantityToAdd,
-            volume,
-          },
-        ];
       }
+      return [
+        ...prevItems,
+        {
+          id: targetId,
+          name,
+          producer,
+          price,
+          numericPrice,
+          image,
+          quantity: quantityToAdd,
+          volume,
+        },
+      ];
     });
   };
 
@@ -130,7 +131,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         removeFromCart,
         updateQuantity,
         clearCart,
-        openCart: () => setCartOpen(true),
+        openCart: () => {
+          setCartOpen(false);
+          router.push("/cart");
+        },
         closeCart: () => setCartOpen(false),
       }}
     >

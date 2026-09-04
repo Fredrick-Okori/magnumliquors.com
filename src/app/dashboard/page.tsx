@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Product, products as fallbackProducts } from "@/data/products";
 import { useCurrency } from "@/context/CurrencyContext";
+import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
 interface OrderItem {
   productName: string;
@@ -740,7 +741,18 @@ export default function DashboardOverviewPage() {
                 <div key={p.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#f7f7f6] p-1 border border-[#e5e5e4] flex items-center justify-center">
-                      <img src={p.image} alt={p.name} className="h-full w-full object-contain" />
+                      {isVideoMedia(p.image) ? (
+                        <FastVideo
+                          src={p.image}
+                          autoPlay
+                          loop
+                          muted
+                          objectFit="contain"
+                          className="h-full w-full rounded-lg"
+                        />
+                      ) : (
+                        <img src={p.image} alt={p.name} className="h-full w-full object-contain" />
+                      )}
                     </div>
                     <div>
                       <p className="font-serif text-xs font-bold text-[#18181b] line-clamp-1">{p.name}</p>

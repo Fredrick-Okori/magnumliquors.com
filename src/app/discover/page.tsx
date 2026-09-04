@@ -509,7 +509,6 @@ function DiscoverContent() {
                           onClick={(e) => {
                             e.preventDefault();
                             handleAddToCart(product);
-                            openCart();
                           }}
                           className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-neutral-600 hover:text-neutral-900 transition"
                         >

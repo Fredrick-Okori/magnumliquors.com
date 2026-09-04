@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Cart } from "./Cart";
 import { Footer } from "./Footer";
 import { CartProvider, useCart } from "./CartContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -12,7 +11,7 @@ import { ScrollBrandBanner } from "./ScrollBrandBanner";
 import { HeroNavStrip } from "./HeroNavStrip";
 
 function ChromeContent({ children }: { children: React.ReactNode }) {
-  const { count, cartOpen, openCart, closeCart } = useCart();
+  const { count } = useCart();
   const pathname = usePathname();
 
   // Omit storefront chrome on Dashboard & Auth routes
@@ -28,12 +27,11 @@ function ChromeContent({ children }: { children: React.ReactNode }) {
   return (
     <>
       <AgeGate />
-      <Navbar cartCount={count} onCartClick={openCart} />
+      <Navbar cartCount={count} />
       <HeroNavStrip />
       {children}
       <ScrollBrandBanner />
       <Footer />
-      <Cart count={count} open={cartOpen} onClose={closeCart} />
     </>
   );
 }

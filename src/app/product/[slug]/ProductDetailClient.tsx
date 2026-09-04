@@ -433,11 +433,22 @@ export default function ProductDetailClient({
                   </div>
 
                   <div className="relative my-6 flex aspect-[1.1] items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]">
-                    <img
-                      src={rel.image}
-                      alt={rel.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                    {isVideoMedia(rel.image) ? (
+                      <FastVideo
+                        src={rel.image}
+                        autoPlay
+                        loop
+                        muted
+                        objectFit="cover"
+                        className="h-full w-full"
+                      />
+                    ) : (
+                      <img
+                        src={rel.image}
+                        alt={rel.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
                   </div>
 
                   <div className="flex items-end justify-between gap-3 pt-2 z-10">
