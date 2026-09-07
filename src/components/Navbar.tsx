@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, ShoppingBag, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { CurrencySwitcher } from "./CurrencySwitcher";
 import { useTheme } from "@/context/ThemeContext";
+import { Product, productHref } from "@/data/products";
 
 export function Navbar({
   cartCount = 0,
@@ -15,8 +17,41 @@ export function Navbar({
   onCartClick?: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  useEffect(() => {
+    if (!searchOpen || products.length > 0) return;
+
+    fetch("/api/store-products", { cache: "force-cache" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => setProducts([]));
+  }, [searchOpen, products.length]);
+
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+
+    return products
+      .filter((product) =>
+        [product.name, product.producer, product.origin, product.category]
+          .some((value) => value?.toLowerCase().includes(query))
+      )
+      .slice(0, 6);
+  }, [products, searchQuery]);
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) return;
+    setSearchOpen(false);
+    router.push(`/discover?search=${encodeURIComponent(query)}`);
+  };
 
   return (
     <header
@@ -115,32 +150,71 @@ export function Navbar({
           </Link>
         </nav>
 
-        {/* Right Controls: Currency Switcher, Theme Switcher & Quick Cart Page Link */}
+        {/* Right Controls: Search, Currency Switcher & Theme Switcher */}
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              type="button"
+              aria-label="Search products"
+              aria-expanded={searchOpen}
+              onClick={() => setSearchOpen((open) => !open)}
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
+                isDark ? "text-white hover:bg-white/10" : "text-neutral-900 hover:bg-neutral-100"
+              }`}
+            >
+              <Search size={18} />
+            </button>
+
+            {searchOpen && (
+              <div className={`fixed left-4 right-4 top-20 z-50 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl p-3 shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[22rem] ${
+                isDark ? "bg-[#161310] text-white" : "bg-white text-neutral-900"
+              }`}>
+                <form id="global-product-search" onSubmit={handleSearchSubmit}>
+                  <div className="flex items-center gap-2 rounded-full border border-neutral-200/80 px-3 py-2">
+                    <Search size={15} className="shrink-0 text-neutral-400" />
+                    <input
+                      autoFocus
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search bottles, brands, origins..."
+                      className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-neutral-400 sm:text-xs"
+                    />
+                  </div>
+                </form>
+
+                {searchQuery.trim() && (
+                  <div className="mt-2 space-y-1">
+                    {searchResults.map((product) => (
+                      <Link
+                        key={product.id}
+                        href={productHref(product)}
+                        onClick={() => setSearchOpen(false)}
+                        className="block rounded-lg px-2 py-2 text-xs hover:bg-neutral-100 dark:hover:bg-white/10"
+                      >
+                        <span className="block truncate font-semibold">{product.name}</span>
+                        <span className="block truncate text-[10px] text-neutral-500">{product.producer} · {product.category}</span>
+                      </Link>
+                    ))}
+                    {searchResults.length === 0 && (
+                      <p className="px-2 py-2 text-xs text-neutral-500">No bottles found.</p>
+                    )}
+                    <button
+                      type="submit"
+                      form="global-product-search"
+                      className="w-full px-2 pt-2 text-left text-[11px] font-semibold text-[#b8860b] hover:underline"
+                    >
+                      View all search results
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           {/* Currency Switcher (UGX / USD) */}
           <CurrencySwitcher />
 
           {/* Theme Switcher Control */}
           <ThemeSwitcher />
-
-          {/* Quick Cart Pill Button (Navigates to /cart) */}
-          <Link
-            href="/cart"
-            aria-label="Shopping cart page"
-            className={`relative flex h-10 items-center gap-2 rounded-full border px-3 text-xs font-bold transition shadow-2xs ${
-              isDark
-                ? "border-white/10 bg-[#161310] text-white hover:border-[#b8860b]/40 hover:bg-[#1f1b16]"
-                : "border-neutral-200/80 bg-neutral-100 text-neutral-900 hover:bg-neutral-200"
-            }`}
-          >
-            <ShoppingBag size={17} className="text-[#b8860b]" />
-            <span className="hidden sm:inline font-mono">{cartCount}</span>
-            {cartCount > 0 && (
-              <span className="sm:hidden absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#b8860b] text-[9px] font-bold text-white">
-                {cartCount}
-              </span>
-            )}
-          </Link>
         </div>
       </div>
     </header>

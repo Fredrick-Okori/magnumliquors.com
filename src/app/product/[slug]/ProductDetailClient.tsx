@@ -50,7 +50,8 @@ export default function ProductDetailClient({
   const [isLoading, setIsLoading] = useState(!initialProduct);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const [activeTab, setActiveTab] = useState<"tasting" | "specs">("tasting");
+  const [stockWarning, setStockWarning] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"tasting" | "specs">("specs");
   const { addToCart, openCart } = useCart();
   const { formatAmount } = useCurrency();
 
@@ -145,7 +146,13 @@ export default function ProductDetailClient({
   }
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    const result = addToCart(product, quantity);
+    if (!result.success) {
+      setStockWarning(result.message || "This product is unavailable.");
+      return;
+    }
+
+    setStockWarning(null);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
     openCart();
@@ -248,7 +255,7 @@ export default function ProductDetailClient({
             </p>
 
             {/* Title */}
-            <h1 className="mt-2 font-serif text-4xl font-light tracking-tight text-neutral-900 sm:text-5xl">
+            <h1 className="mt-2 font-sans text-4xl font-light tracking-tight text-neutral-900 sm:text-5xl">
               {product.name}
             </h1>
 
@@ -259,7 +266,9 @@ export default function ProductDetailClient({
                 <span>{product.rating}</span>
               </div>
               <span className="text-neutral-300">•</span>
-              <span className="font-semibold text-emerald-700">In Stock</span>
+              <span className={`font-semibold ${product.inStock ? "text-emerald-700" : "text-red-700"}`}>
+                {product.inStock ? "In Stock" : "Out of Stock"}
+              </span>
               <span className="text-neutral-300">•</span>
               <span className="text-neutral-500">{product.volume}</span>
             </div>
@@ -291,7 +300,13 @@ export default function ProductDetailClient({
                   {quantity}
                 </span>
                 <button
-                  onClick={() => setQuantity((q) => q + 1)}
+                  onClick={() => {
+                    if (typeof product.stockQuantity === "number" && quantity >= product.stockQuantity) {
+                      setStockWarning(`Only ${product.stockQuantity} ${product.stockQuantity === 1 ? "unit" : "units"} available.`);
+                      return;
+                    }
+                    setQuantity((q) => q + 1);
+                  }}
                   aria-label="Increase quantity"
                   className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 transition"
                 >
@@ -310,6 +325,11 @@ export default function ProductDetailClient({
                 <span>{added ? "Added to Cart!" : `Add to Cart — ${formatAmount(product.numericPrice * quantity)}`}</span>
               </button>
             </div>
+            {stockWarning && (
+              <p role="alert" className="mt-3 text-xs font-semibold text-red-700">
+                {stockWarning}
+              </p>
+            )}
 
             {/* Specs & Tasting Tabs Section */}
             <div className="mt-10 rounded-3xl border border-neutral-200/80 bg-white p-6 shadow-xs">
@@ -317,18 +337,8 @@ export default function ProductDetailClient({
               {/* Tabs Switcher */}
               <div className="flex border-b border-neutral-200/80 pb-3">
                 <button
-                  onClick={() => setActiveTab("tasting")}
-                  className={`flex items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-wider transition ${
-                    activeTab === "tasting"
-                      ? "border-b-2 border-neutral-900 text-neutral-900"
-                      : "text-neutral-400 hover:text-neutral-700"
-                  }`}
-                >
-                  <Sparkles size={14} className="text-[#d4af37]" /> Tasting Notes
-                </button>
-                <button
                   onClick={() => setActiveTab("specs")}
-                  className={`ml-6 flex items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-wider transition ${
+                  className={`flex items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-wider transition ${
                     activeTab === "specs"
                       ? "border-b-2 border-neutral-900 text-neutral-900"
                       : "text-neutral-400 hover:text-neutral-700"
@@ -336,10 +346,39 @@ export default function ProductDetailClient({
                 >
                   Specifications & Aging
                 </button>
+                <button
+                  onClick={() => setActiveTab("tasting")}
+                  className={`ml-6 flex items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-wider transition ${
+                    activeTab === "tasting"
+                      ? "border-b-2 border-neutral-900 text-neutral-900"
+                      : "text-neutral-400 hover:text-neutral-700"
+                  }`}
+                >
+                  <Sparkles size={14} className="text-[#d4af37]" /> Tasting Notes
+                </button>
               </div>
 
               {/* Tab Content */}
-              {activeTab === "tasting" ? (
+              {activeTab === "specs" ? (
+                <div className="mt-4 grid grid-cols-2 gap-4 text-xs">
+                  <div className="rounded-xl bg-neutral-50 p-3">
+                    <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Strength / ABV</span>
+                    <span className="font-semibold text-neutral-900">{product.abv}</span>
+                  </div>
+                  <div className="rounded-xl bg-neutral-50 p-3">
+                    <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Volume</span>
+                    <span className="font-semibold text-neutral-900">{product.volume}</span>
+                  </div>
+                  <div className="rounded-xl bg-neutral-50 p-3">
+                    <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Vintage</span>
+                    <span className="font-semibold text-neutral-900">{product.vintage || "Reserve Selection"}</span>
+                  </div>
+                  <div className="rounded-xl bg-neutral-50 p-3">
+                    <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Maturation / Cask</span>
+                    <span className="font-semibold text-neutral-900">{product.cask || "Selected Oak Casks"}</span>
+                  </div>
+                </div>
+              ) : (
                 <div className="mt-4 space-y-3 text-xs">
                   <div>
                     <span className="font-semibold text-[#b8860b] uppercase tracking-wider block mb-0.5">
@@ -364,25 +403,6 @@ export default function ProductDetailClient({
                       Sommelier Pairing
                     </span>
                     <p className="text-neutral-700 leading-relaxed">{product.tastingNotes?.pairing || "Best enjoyed neat, on the rocks, or paired with fine artisan desserts."}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-4 grid grid-cols-2 gap-4 text-xs">
-                  <div className="rounded-xl bg-neutral-50 p-3">
-                    <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Strength / ABV</span>
-                    <span className="font-semibold text-neutral-900">{product.abv}</span>
-                  </div>
-                  <div className="rounded-xl bg-neutral-50 p-3">
-                    <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Volume</span>
-                    <span className="font-semibold text-neutral-900">{product.volume}</span>
-                  </div>
-                  <div className="rounded-xl bg-neutral-50 p-3">
-                    <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Vintage</span>
-                    <span className="font-semibold text-neutral-900">{product.vintage || "Reserve Selection"}</span>
-                  </div>
-                  <div className="rounded-xl bg-neutral-50 p-3">
-                    <span className="text-neutral-400 uppercase tracking-wider text-[10px] block">Maturation / Cask</span>
-                    <span className="font-semibold text-neutral-900">{product.cask || "Selected Oak Casks"}</span>
                   </div>
                 </div>
               )}
@@ -456,7 +476,7 @@ export default function ProductDetailClient({
                       <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">
                         {rel.producer} · {rel.category}
                       </p>
-                      <h3 className="mt-0.5 text-base font-semibold tracking-tight text-neutral-900">
+                      <h3 className="mt-0.5 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-base font-semibold tracking-tight text-neutral-900">
                         {rel.name}
                       </h3>
                     </div>

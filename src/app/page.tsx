@@ -283,7 +283,7 @@ export default function Home() {
                         {product.producer} · {product.category}
                       </p>
                       <h3
-                        className={`mt-0.5 font-serif text-lg font-bold tracking-tight transition ${
+                        className={`mt-0.5 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-lg font-bold tracking-tight transition ${
                           isDark
                             ? "text-white group-hover/title:text-[#e5c875]"
                             : "text-neutral-900 group-hover/title:text-[#b8860b]"

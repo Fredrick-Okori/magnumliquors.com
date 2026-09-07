@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import DiscoverPage from "@/app/discover/page";
 
 export default function ProductsIndexPage() {
-  redirect("/discover");
+  return <DiscoverPage />;
 }
 

@@ -49,9 +49,10 @@ const origins = [
 function DiscoverContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
+  const searchParam = searchParams.get("search");
 
   const [activeCategory, setActiveCategory] = useState(categoryParam || "All");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParam || "");
   const [sortOption, setSortOption] = useState<"featured" | "price-asc" | "price-desc" | "rating">("featured");
 
   // Left Sidebar Filter States
@@ -71,11 +72,11 @@ function DiscoverContent() {
     if (categoryParam) {
       setActiveCategory(categoryParam);
     }
-  }, [categoryParam]);
+    setSearchQuery(searchParam || "");
+  }, [categoryParam, searchParam]);
 
   useEffect(() => {
-    setIsLoading(true);
-    fetch("/api/store-products")
+    fetch("/api/store-products", { cache: "force-cache" })
       .then((res) => res.json())
       .then((data) => {
         const apiList = Array.isArray(data) ? data : [];
@@ -471,6 +472,8 @@ function DiscoverContent() {
                         <img
                           src={product.image}
                           alt={product.name}
+                          loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       )}
@@ -482,7 +485,7 @@ function DiscoverContent() {
                         <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8e8e8e]">
                           {product.producer} • {product.origin}
                         </span>
-                        <h3 className="font-serif text-lg font-bold text-neutral-900 mt-1 line-clamp-1">
+                        <h3 className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-lg font-bold text-neutral-900 mt-1">
                           <Link href={productHref(product)} className="hover:text-[#b8860b] transition">
                             {product.name}
                           </Link>

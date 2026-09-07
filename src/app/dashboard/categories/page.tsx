@@ -159,6 +159,8 @@ export default function CategoriesPage() {
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fffcf0] border border-[#f3e5b8] text-[#b8860b] shadow-2xs">
                       <Wine size={18} />
+                    </div>
+                    <div>
                       <h3 className="font-serif text-xl font-bold text-[#18181b]">{category.name}</h3>
                       <p className="text-[10px] uppercase font-bold tracking-wider text-[#b8860b]">
                         {bottleCount} {bottleCount === 1 ? "bottle listed" : "bottles listed"}

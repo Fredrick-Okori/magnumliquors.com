@@ -163,8 +163,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     const finalMediaUrl = mediaType === "video" && videoUrl ? videoUrl : image;
 
     try {
-      const res = await fetch("/api/store-products", {
-        method: "PUT",
+      const res = await fetch(`/api/store-products?id=${encodeURIComponent(id)}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id,
@@ -190,7 +190,15 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         }),
       });
 
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: { error?: string } = {};
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          throw new Error(`Failed to update product (HTTP ${res.status}).`);
+        }
+      }
 
       if (!res.ok || data.error) {
         throw new Error(data.error || "Failed to update product.");
@@ -495,8 +503,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 required
                 value={priceUGX}
                 onChange={(e) => setPriceUGX(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
                 placeholder="e.g. 350000"
-                className="w-full h-11 rounded-2xl border border-[#e5e5e4] bg-white px-4 text-xs text-[#18181b] font-semibold outline-none focus:border-[#b8860b] transition shadow-2xs"
+                className="w-full h-11 rounded-2xl border border-[#e5e5e4] bg-white px-4 text-xs text-[#18181b] font-semibold outline-none focus:border-[#b8860b] transition shadow-2xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <span className="text-[11px] text-[#71717a]">
                 ≈ USD ${(Number(priceUGX || 0) / 3700).toFixed(2)}

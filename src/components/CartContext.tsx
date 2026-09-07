@@ -13,6 +13,12 @@ export interface CartItem {
   image: string;
   quantity: number;
   volume?: string;
+  stockQuantity?: number;
+}
+
+export interface CartAddResult {
+  success: boolean;
+  message?: string;
 }
 
 interface CartContextType {
@@ -23,7 +29,7 @@ interface CartContextType {
   shippingFee: number;
   grandTotal: number;
   cartOpen: boolean;
-  addToCart: (product?: Partial<Product> | null, quantityToAdd?: number) => void;
+  addToCart: (product?: Partial<Product> | null, quantityToAdd?: number) => CartAddResult;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -54,9 +60,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       targetProduct.image ||
       "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?auto=format&fit=crop&w=900&q=85";
     const volume = targetProduct.volume || "750 ml";
+    const stockQuantity = targetProduct.stockQuantity;
+
+    if (targetProduct.inStock === false || stockQuantity === 0) {
+      return { success: false, message: `${name} is out of stock.` };
+    }
+
+    let result: CartAddResult = { success: true };
 
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex((item) => item.id === targetId);
+      const currentQuantity = existingIndex > -1 ? prevItems[existingIndex].quantity : 0;
+      if (typeof stockQuantity === "number" && currentQuantity + quantityToAdd > stockQuantity) {
+        result = {
+          success: false,
+          message: `Only ${stockQuantity} ${stockQuantity === 1 ? "unit" : "units"} of ${name} ${stockQuantity === 1 ? "is" : "are"} available.`,
+        };
+        return prevItems;
+      }
+
       if (existingIndex > -1) {
         const updated = [...prevItems];
         updated[existingIndex] = {
@@ -76,9 +98,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           image,
           quantity: quantityToAdd,
           volume,
+          stockQuantity,
         },
       ];
     });
+
+    return result;
   };
 
   const removeFromCart = (id: string) => {
@@ -91,7 +116,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const limitedQuantity = typeof item.stockQuantity === "number"
+          ? Math.min(quantity, item.stockQuantity)
+          : quantity;
+        return { ...item, quantity: limitedQuantity };
+      })
     );
   };
 
