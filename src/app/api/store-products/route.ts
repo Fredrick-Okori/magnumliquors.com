@@ -13,8 +13,23 @@ import { Product, products as fallbackCatalog } from "@/data/products";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  try {
+const PRODUCT_CACHE_TTL_MS = 30_000;
+let productCache: { products: Product[]; expiresAt: number } | null = null;
+let productRequest: Promise<Product[]> | null = null;
+
+function invalidateProductCache() {
+  productCache = null;
+}
+
+async function loadProductCatalog(): Promise<Product[]> {
+  const cached = productCache;
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.products;
+  }
+
+  if (productRequest) return productRequest;
+
+  productRequest = (async () => {
     const supabaseProducts = await getProductsFromSupabase();
     const mappedList: Product[] = [];
 
@@ -50,23 +65,36 @@ export async function GET() {
       });
     }
 
-    // Merge with fallback catalog so all categories are fully stocked
     const existingNames = new Set(mappedList.map((p) => p.name.toLowerCase()));
-    const finalProducts = [
+    return [
       ...mappedList,
       ...fallbackCatalog.filter((fp) => !existingNames.has(fp.name.toLowerCase())),
     ];
+  })();
+
+  try {
+    const products = await productRequest;
+    productCache = { products, expiresAt: Date.now() + PRODUCT_CACHE_TTL_MS };
+    return products;
+  } finally {
+    productRequest = null;
+  }
+}
+
+export async function GET() {
+  try {
+    const finalProducts = await loadProductCatalog();
 
     return NextResponse.json(finalProducts, {
       headers: {
-        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=59",
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
       },
     });
   } catch (error) {
     console.error("GET store-products error:", error);
     return NextResponse.json(fallbackCatalog, {
       headers: {
-        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=59",
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
       },
     });
   }
@@ -132,10 +160,12 @@ export async function POST(request: Request) {
       },
     };
 
+    invalidateProductCache();
     return NextResponse.json({ success: true, product: createdProduct });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("POST store-products Supabase error:", error);
-    return NextResponse.json({ error: error?.message || "Failed to create product in Supabase" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Failed to create product in Supabase";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -180,6 +210,7 @@ export async function PATCH(request: Request) {
 
     const updated = await updateProductInSupabase(id, updatePayload);
 
+    invalidateProductCache();
     return NextResponse.json({ success: true, product: updated });
   } catch (error) {
     console.error("PATCH store-products Supabase error:", error);
@@ -196,6 +227,7 @@ export async function DELETE(request: Request) {
     }
 
     const success = await deleteProductFromSupabase(id);
+    if (success) invalidateProductCache();
     return NextResponse.json({ success });
   } catch (error) {
     console.error("DELETE store-products Supabase error:", error);
