@@ -28,14 +28,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState("manager@magnum.com");
+  const [userRole, setUserRole] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const session = localStorage.getItem("magnum_dashboard_authenticated");
     const storedEmail = localStorage.getItem("magnum_user_email");
+    const storedRole = localStorage.getItem("magnum_user_role");
     if (session === "true") {
       setIsAuthenticated(true);
       if (storedEmail) setUserEmail(storedEmail);
+      if (storedRole) setUserRole(storedRole);
     } else {
       router.push("/login");
     }
@@ -45,6 +48,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     await signOutManagerFromSupabase();
     localStorage.removeItem("magnum_dashboard_authenticated");
     localStorage.removeItem("magnum_user_email");
+    localStorage.removeItem("magnum_user_role");
+    localStorage.removeItem("magnum_access_token");
     setIsAuthenticated(false);
     router.push("/login");
   };
@@ -80,7 +85,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const settingsItems = [
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
-    { href: "/dashboard/team", label: "Team", icon: Users },
+    ...(userRole.toLowerCase() === "superadmin"
+      ? [{ href: "/dashboard/team", label: "Team", icon: Users }]
+      : []),
     { href: "/dashboard/help", label: "Help", icon: HelpCircle },
   ];
 
@@ -125,13 +132,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="w-64 shrink-0 border-r border-[#e5e5e4] bg-white flex flex-col justify-between p-5 overflow-y-auto scrollbar-none">
         <div className="space-y-5">
           
-          <div className="flex items-center gap-3 px-2 pt-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#b8860b] text-white font-bold text-sm shadow-sm">
-              M
-            </div>
-            <h1 className="font-bold text-lg tracking-tight text-[#18181b]">
-              Magnum Cellar
-            </h1>
+          <div className="px-2 pt-1">
+            <Link href="/dashboard" aria-label="Magnum Liquors dashboard home" className="inline-flex items-center">
+              <img
+                src="/magnum_gold.png"
+                alt="Magnum Liquors"
+                width={166}
+                height={42}
+                className="h-10 w-auto object-contain"
+              />
+            </Link>
           </div>
 
           {/* 1. MENU SECTION */}

@@ -26,6 +26,10 @@ const afacadFlux = Afacad_Flux({
 export const metadata: Metadata = {
   title: "Magnum Liquors | Better bottles, delivered",
   description: "Thoughtfully sourced wine, spirits, and all the good stuff in between.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/magnum_logo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

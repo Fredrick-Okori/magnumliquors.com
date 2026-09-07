@@ -22,7 +22,7 @@ export default function DashboardLoginPage() {
     setLoginError("");
     setIsAuthenticating(true);
 
-    const { user, error } = await signInManagerWithSupabase(loginEmail, loginPassword);
+    const { user, session, error } = await signInManagerWithSupabase(loginEmail, loginPassword);
     setIsAuthenticating(false);
 
     if (error) {
@@ -34,6 +34,10 @@ export default function DashboardLoginPage() {
       const email = user.email || loginEmail;
       localStorage.setItem("magnum_dashboard_authenticated", "true");
       localStorage.setItem("magnum_user_email", email);
+      localStorage.setItem("magnum_user_role", String(user.user_metadata?.role || "Manager"));
+      if (session?.access_token) {
+        localStorage.setItem("magnum_access_token", session.access_token);
+      }
       router.push("/dashboard");
     }
   };

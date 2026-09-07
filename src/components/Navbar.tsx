@@ -77,11 +77,16 @@ export function Navbar({
         {/* Brand Logo */}
         <Link
           href="/"
-          className={`font-serif text-2xl font-bold tracking-tight lg:text-3xl ${
-            isDark ? "text-white" : "text-neutral-900"
-          }`}
+          aria-label="Magnum Liquors home"
+          className="flex shrink-0 items-center"
         >
-          MAGNUM<span className="text-[#b8860b]">.</span>
+          <img
+            src="/magnum_gold.png"
+            alt="Magnum Liquors"
+            width={132}
+            height={40}
+            className="h-8 w-auto object-contain lg:h-10"
+          />
         </Link>
 
         {/* Main Navigation Links (Including Cart Nav Page Link) */}

@@ -24,7 +24,7 @@ const slides: Slide[] = [
     description: "Showcasing some of the 20th century's finest single malts.",
     ctaText: "VIEW COLLECTION",
     ctaLink: "#shop",
-    bgImage: "/Screenshot 2026-08-22 at 22.19.03.png",
+    bgImage: "/Screenshot 2026-08-22 at 22.19.03_converted.avif",
   },
   {
     id: 2,
@@ -34,7 +34,7 @@ const slides: Slide[] = [
     description: "Distilled from an extraordinary 75% high-rye mash bill aged in charred White Oak.",
     ctaText: "VIEW COLLECTION",
     ctaLink: "#shop",
-    bgImage: "/Screenshot 2026-08-22 at 22.19.13.png",
+    bgImage: "/Screenshot 2026-08-22 at 22.19.13_converted.avif",
   },
   {
     id: 3,
@@ -44,7 +44,7 @@ const slides: Slide[] = [
     description: "Hand-harvested from high-elevation hillside vineyards, aged 28 months in French oak.",
     ctaText: "VIEW COLLECTION",
     ctaLink: "#shop",
-    bgImage: "/Screenshot 2026-08-22 at 22.19.27.png",
+    bgImage: "/Screenshot 2026-08-22 at 22.19.27_converted.avif",
   },
   {
     id: 4,
@@ -54,7 +54,7 @@ const slides: Slide[] = [
     description: "Hand-foraged from coastal heaths and slow-distilled in an heirloom copper pot still.",
     ctaText: "VIEW COLLECTION",
     ctaLink: "#shop",
-    bgImage: "/Screenshot 2026-08-22 at 22.19.41.png",
+    bgImage: "/Screenshot 2026-08-22 at 22.19.41_converted.avif",
   },
 ];
 

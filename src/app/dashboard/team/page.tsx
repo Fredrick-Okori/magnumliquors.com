@@ -43,6 +43,8 @@ export default function TeamPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const isSuperadmin = typeof window !== "undefined" &&
+    localStorage.getItem("magnum_user_role")?.toLowerCase() === "superadmin";
 
   // Form State
   const [fullName, setFullName] = useState("");
@@ -109,7 +111,11 @@ export default function TeamPage() {
     try {
       const res = await fetch("/api/team/users", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("magnum_access_token") || ""}`,
+        },
+        credentials: "include",
         body: JSON.stringify({
           name: fullName.trim() || email.split("@")[0],
           email: email.trim(),
@@ -221,16 +227,18 @@ export default function TeamPage() {
             <RefreshCw size={13} className={isLoading ? "animate-spin text-[#b8860b]" : "text-[#71717a]"} /> Sync
           </button>
 
-          <button
-            onClick={() => {
-              setErrorMessage(null);
-              setSuccessMessage(null);
-              setIsModalOpen(true);
-            }}
-            className="rounded-full bg-[#b8860b] hover:bg-[#996515] px-5 py-2.5 text-xs font-bold text-white transition shadow-sm flex items-center gap-1.5"
-          >
-            <UserPlus size={16} /> Create New User
-          </button>
+          {isSuperadmin && (
+            <button
+              onClick={() => {
+                setErrorMessage(null);
+                setSuccessMessage(null);
+                setIsModalOpen(true);
+              }}
+              className="rounded-full bg-[#b8860b] hover:bg-[#996515] px-5 py-2.5 text-xs font-bold text-white transition shadow-sm flex items-center gap-1.5"
+            >
+              <UserPlus size={16} /> Create New User
+            </button>
+          )}
         </div>
       </div>
 

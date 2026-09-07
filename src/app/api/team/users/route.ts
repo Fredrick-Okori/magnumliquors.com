@@ -37,6 +37,17 @@ function normalizeRole(roleInput?: string): TeamRole {
   return "Sales";
 }
 
+async function isSuperadminRequest(request: Request): Promise<boolean> {
+  const authorization = request.headers.get("authorization");
+  const token = authorization?.startsWith("Bearer ") ? authorization.slice(7) : "";
+  if (!token) return false;
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data.user) return false;
+
+  return normalizeRole(data.user.user_metadata?.role) === "Superadmin";
+}
+
 export async function GET() {
   try {
     const list: TeamMember[] = [];
@@ -103,6 +114,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    if (!(await isSuperadminRequest(request))) {
+      return NextResponse.json({ error: "Only Superadmins can create team users." }, { status: 403 });
+    }
+
     const body = await request.json();
     const { name, email, password, role, phone } = body;
 

@@ -58,8 +58,14 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12 items-center border-b border-white/10 pb-12">
           
           <div className="lg:col-span-6 space-y-3">
-            <Link href="/" className="font-serif text-3xl font-bold tracking-tight text-white inline-block">
-              MAGNUM<span className="text-[#d4af37]">.</span>
+            <Link href="/" aria-label="Magnum Liquors home" className="inline-block">
+              <img
+                src="/magnum_gold.png"
+                alt="Magnum Liquors"
+                width={166}
+                height={42}
+                className="h-10 w-auto object-contain"
+              />
             </Link>
             <p className="text-sm font-light text-neutral-400 max-w-md leading-relaxed">
               Thoughtfully curated single malts, estate vintage wines, and artisanal spirits. Delivered in climate-controlled packaging directly to your cellar.

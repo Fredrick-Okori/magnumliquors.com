@@ -96,13 +96,13 @@ export async function signInManagerWithSupabase(email: string, password: string)
       if (signUpRes.data.user) {
         return { user: signUpRes.data.user, error: null };
       }
-      return { user: { email, role: "manager" }, error: null };
+      return { user: { email, user_metadata: { role: "Manager" } }, session: null, error: null };
     }
 
-    return { user: data.user, error: null };
+    return { user: data.user, session: data.session, error: null };
   } catch (err) {
     console.warn("Supabase auth exception:", err);
-    return { user: { email, role: "manager" }, error: null };
+    return { user: { email, user_metadata: { role: "Manager" } }, session: null, error: null };
   }
 }
 
