@@ -47,6 +47,7 @@ async function loadProductCatalog(): Promise<Product[]> {
           category: sp.category || "Whiskey",
           price: `UGX ${rawPriceUGX.toLocaleString()}`,
           numericPrice: numericUSD,
+          buyingPrice: Number(sp.buying_price ?? 0),
           abv: sp.abv ? `${sp.abv}% ABV` : "40.0% ABV",
           volume: sp.volume_ml ? `${sp.volume_ml} ml` : "750 ml",
           vintage: sp.vintage ? String(sp.vintage) : undefined,
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const priceUGX = parsePriceUgx(body.priceUGX, body.numericPrice);
+    const buyingPriceUGX = parsePriceUgx(body.buyingPriceUGX ?? body.buyingPrice, 0);
     const volumeMl = parseVolumeMl(body.volume);
     const abvNum = parseAbvNumeric(body.abv);
     const stockCount = Number(body.stockQuantity ?? 50);
@@ -117,6 +119,7 @@ export async function POST(request: Request) {
       subcategory: body.subcategory || null,
       country_of_origin: body.origin || body.country_of_origin || "Kampala, Uganda",
       price: priceUGX,
+      buying_price: buyingPriceUGX,
       volume_ml: volumeMl,
       abv: abvNum,
       quantity_in_stock: stockCount,
@@ -144,6 +147,7 @@ export async function POST(request: Request) {
       category: savedData.category || "Whiskey",
       price: `UGX ${Number(savedData.price).toLocaleString()}`,
       numericPrice: numericUSD,
+      buyingPrice: Number(savedData.buying_price ?? buyingPriceUGX),
       abv: `${savedData.abv}% ABV`,
       volume: `${savedData.volume_ml} ml`,
       vintage: savedData.vintage ? String(savedData.vintage) : undefined,
@@ -191,6 +195,9 @@ export async function PATCH(request: Request) {
     if (body.subcategory !== undefined) updatePayload.subcategory = body.subcategory;
     if (body.priceUGX !== undefined || body.price !== undefined || body.numericPrice !== undefined) {
       updatePayload.price = parsePriceUgx(body.priceUGX ?? body.price, body.numericPrice);
+    }
+    if (body.buyingPriceUGX !== undefined || body.buyingPrice !== undefined) {
+      updatePayload.buying_price = parsePriceUgx(body.buyingPriceUGX ?? body.buyingPrice, 0);
     }
     if (body.volume !== undefined || body.volume_ml !== undefined) {
       updatePayload.volume_ml = parseVolumeMl(body.volume ?? body.volume_ml);

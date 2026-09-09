@@ -30,6 +30,9 @@ export interface SupabaseOrder {
     quantity: number;
     unitPriceUSD: number;
     subtotalUSD: number;
+    unitBuyingPriceUGX?: number;
+    grossProfitUGX?: number;
+    developerProfitShareUGX?: number;
   }>;
   created_at?: string;
 }
@@ -42,6 +45,7 @@ export interface SupabaseProductRow {
   subcategory?: string | null;
   country_of_origin?: string | null;
   price: number; // Stored in UGX
+  buying_price?: number | null; // Stored in UGX
   volume_ml: number; // e.g. 750
   abv: number; // e.g. 40.0
   quantity_in_stock?: number;
@@ -159,7 +163,7 @@ export async function getProductsFromSupabase(): Promise<SupabaseProductRow[] | 
   try {
     const { data, error } = await supabase
       .from("products")
-      .select("id,name,brand,category,country_of_origin,price,volume_ml,abv,quantity_in_stock,description,is_active,image_url,vintage")
+      .select("id,name,brand,category,country_of_origin,price,buying_price,volume_ml,abv,quantity_in_stock,description,is_active,image_url,vintage")
       .order("created_at", { ascending: false });
 
     if (error || !data) {

@@ -35,6 +35,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [origin, setOrigin] = useState("");
   const [category, setCategory] = useState("Whiskey");
   const [priceUGX, setPriceUGX] = useState("0");
+  const [buyingPriceUGX, setBuyingPriceUGX] = useState("0");
   const [volume, setVolume] = useState("750 ml");
   const [abv, setAbv] = useState("40.0% ABV");
   const [stockQuantity, setStockQuantity] = useState("50");
@@ -73,6 +74,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           setOrigin(found.origin || "");
           setCategory(found.category || "Whiskey");
           setPriceUGX(String(Math.round(found.numericPrice * 3700)));
+          setBuyingPriceUGX(String(found.buyingPrice ?? 0));
           setVolume(found.volume || "750 ml");
           setAbv(found.abv || "40.0% ABV");
           setStockQuantity(String(found.stockQuantity ?? 50));
@@ -168,6 +170,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           origin,
           category,
           priceUGX: Number(priceUGX || 0),
+          buyingPriceUGX: Number(buyingPriceUGX || 0),
           numericPrice: Number((Number(priceUGX || 0) / 3700).toFixed(2)),
           stockQuantity: Number(stockQuantity || 50),
           abv: abv || "40.0% ABV",
@@ -490,7 +493,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             3. Pricing & Technical Specs
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             <div className="space-y-1.5">
               <label className="font-bold text-[#18181b] block">Price in UGX *</label>
               <input
@@ -505,6 +508,21 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <span className="text-[11px] text-[#71717a]">
                 ≈ USD ${(Number(priceUGX || 0) / 3700).toFixed(2)}
               </span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="font-bold text-[#18181b] block">Buying Price in UGX *</label>
+              <input
+                type="number"
+                required
+                min="0"
+                value={buyingPriceUGX}
+                onChange={(e) => setBuyingPriceUGX(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
+                placeholder="e.g. 250000"
+                className="w-full h-11 rounded-2xl border border-[#e5e5e4] bg-white px-4 text-xs text-[#18181b] font-semibold outline-none focus:border-[#b8860b] transition shadow-2xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <span className="text-[11px] text-[#71717a]">Cost before sale</span>
             </div>
 
             <div className="space-y-1.5">

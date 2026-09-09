@@ -125,10 +125,14 @@ export default function CartPage() {
     setOrderNumber(generatedOrderNum);
 
     const totalUGX = Math.round(calculatedGrandTotal * 3700);
-    const systemCommUSD = Number((calculatedGrandTotal * 0.10).toFixed(2));
-    const systemCommUGX = Math.round(totalUGX * 0.10);
-    const netPayoutUSD = Number((calculatedGrandTotal * 0.90).toFixed(2));
-    const netPayoutUGX = Math.round(totalUGX * 0.90);
+    const grossProfitUGX = items.reduce(
+      (sum, item) => sum + Math.max(0, Math.round(item.numericPrice * 3700 - item.buyingPrice) * item.quantity),
+      0
+    );
+    const systemCommUGX = Math.round(grossProfitUGX * 0.25);
+    const systemCommUSD = Number((systemCommUGX / 3700).toFixed(2));
+    const netPayoutUSD = Number(((totalUGX - systemCommUGX) / 3700).toFixed(2));
+    const netPayoutUGX = totalUGX - systemCommUGX;
 
     const formattedAddress = deliveryInstructions
       ? `${address} (Note: ${deliveryInstructions})`
@@ -145,7 +149,7 @@ export default function CartPage() {
       paymentStatus: "Pending",
       totalAmountUSD: calculatedGrandTotal,
       totalAmountUGX: totalUGX,
-      commissionRate: 0.10,
+      commissionRate: 0.25,
       systemCommissionUSD: systemCommUSD,
       systemCommissionUGX: systemCommUGX,
       netPayoutUSD,
@@ -155,6 +159,9 @@ export default function CartPage() {
         quantity: item.quantity,
         unitPriceUSD: item.numericPrice,
         subtotalUSD: item.numericPrice * item.quantity,
+        unitBuyingPriceUGX: item.buyingPrice,
+        grossProfitUGX: Math.max(0, Math.round(item.numericPrice * 3700 - item.buyingPrice) * item.quantity),
+        developerProfitShareUGX: Math.max(0, Math.round((item.numericPrice * 3700 - item.buyingPrice) * 0.25) * item.quantity),
       })),
     };
 
@@ -181,7 +188,7 @@ export default function CartPage() {
       paymentStatus: "Pending",
       totalAmountUSD: calculatedGrandTotal,
       totalAmountUGX: totalUGX,
-      commissionRate: 0.10,
+      commissionRate: 0.25,
       systemCommissionUSD: systemCommUSD,
       systemCommissionUGX: systemCommUGX,
       netPayoutUSD,
@@ -192,6 +199,9 @@ export default function CartPage() {
         quantity: item.quantity,
         unitPriceUSD: item.numericPrice,
         subtotalUSD: item.numericPrice * item.quantity,
+        unitBuyingPriceUGX: item.buyingPrice,
+        grossProfitUGX: Math.max(0, Math.round(item.numericPrice * 3700 - item.buyingPrice) * item.quantity),
+        developerProfitShareUGX: Math.max(0, Math.round((item.numericPrice * 3700 - item.buyingPrice) * 0.25) * item.quantity),
       })),
       createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
     };

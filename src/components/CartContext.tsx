@@ -10,6 +10,7 @@ export interface CartItem {
   producer: string;
   price: string;
   numericPrice: number;
+  buyingPrice: number;
   image: string;
   quantity: number;
   volume?: string;
@@ -56,6 +57,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       targetProduct.numericPrice ||
       parseFloat(price.replace(/[^0-9.]/g, "")) ||
       24.99;
+    const buyingPrice = targetProduct.buyingPrice || 0;
     const image =
       targetProduct.image ||
       "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?auto=format&fit=crop&w=900&q=85";
@@ -95,6 +97,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           producer,
           price,
           numericPrice,
+          buyingPrice,
           image,
           quantity: quantityToAdd,
           volume,

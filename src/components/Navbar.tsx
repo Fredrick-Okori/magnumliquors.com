@@ -4,8 +4,6 @@ import Link from "next/link";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ThemeSwitcher } from "./ThemeSwitcher";
-import { CurrencySwitcher } from "./CurrencySwitcher";
 import { useTheme } from "@/context/ThemeContext";
 import { Product, productHref } from "@/data/products";
 
@@ -155,7 +153,7 @@ export function Navbar({
           </Link>
         </nav>
 
-        {/* Right Controls: Search, Currency Switcher & Theme Switcher */}
+        {/* Right Controls: Search */}
         <div className="flex items-center gap-3">
           <div className="relative">
             <button
@@ -215,11 +213,6 @@ export function Navbar({
               </div>
             )}
           </div>
-          {/* Currency Switcher (UGX / USD) */}
-          <CurrencySwitcher />
-
-          {/* Theme Switcher Control */}
-          <ThemeSwitcher />
         </div>
       </div>
     </header>

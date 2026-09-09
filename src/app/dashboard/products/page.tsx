@@ -238,7 +238,10 @@ export default function ProductsPage() {
                   <h3 className="font-serif text-base font-bold text-[#18181b] truncate mt-1">{p.name}</h3>
                   <p className="text-xs text-[#71717a] truncate">{p.producer} • {p.origin}</p>
                   <p className="font-sans text-base font-extrabold text-[#b8860b] mt-0.5 tracking-tight">
-                    {formatAmount(p.numericPrice)}
+                    Selling: {formatAmount(p.numericPrice)}
+                  </p>
+                  <p className="text-[11px] text-[#71717a]">
+                    Buying: UGX {p.buyingPrice.toLocaleString()} · Profit: UGX {Math.max(0, Math.round(p.numericPrice * 3700 - p.buyingPrice)).toLocaleString()}
                   </p>
                 </div>
               </div>

@@ -20,6 +20,7 @@ async function fetchProductsFromDb(): Promise<Product[]> {
       category: sp.category || "Spirits",
       price: sp.price || `UGX ${(Number(sp.numeric_price || 0) * 3700).toLocaleString()}`,
       numericPrice: Number(sp.numeric_price || 0),
+      buyingPrice: Number(sp.buying_price || 0),
       badge: sp.badge || undefined,
       abv: sp.abv || "40.0% ABV",
       volume: sp.volume || "750 ml",

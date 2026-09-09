@@ -9,6 +9,8 @@ interface OrderItem {
   quantity: number;
   unitPriceUSD: number;
   subtotalUSD: number;
+  grossProfitUGX?: number;
+  developerProfitShareUGX?: number;
 }
 
 interface Order {
@@ -226,6 +228,11 @@ export default function OrdersPage() {
         <div className="divide-y divide-[#f4f4f3]">
           {filteredOrders.map((order) => (
             <div key={order.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              {(() => {
+                const grossProfitUGX = (order.items || []).reduce((sum, item) => sum + (item.grossProfitUGX || 0), 0);
+                const developerProfitShareUGX = Math.round(grossProfitUGX * 0.25);
+                return (
+                  <>
               
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
@@ -246,10 +253,10 @@ export default function OrdersPage() {
                     Total: {formatAmount(order.totalAmountUSD)}
                   </span>
                   <span className="text-[#b8860b] text-[10px] font-sans font-bold bg-[#fffcf0] border border-[#f3e5b8] px-2 py-0.5 rounded-full">
-                    10% Dev Fee: UGX {Math.round((order.totalAmountUGX || order.totalAmountUSD * 3700) * 0.10).toLocaleString()}
+                    25% Profit Share: UGX {developerProfitShareUGX.toLocaleString()}
                   </span>
                   <span className="text-[#16a34a] text-[10px] font-sans font-bold bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                    90% Store Net: UGX {Math.round((order.totalAmountUGX || order.totalAmountUSD * 3700) * 0.90).toLocaleString()}
+                    Gross Profit: UGX {grossProfitUGX.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -280,7 +287,9 @@ export default function OrdersPage() {
                   <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
-
+                  </>
+                );
+              })()}
             </div>
           ))}
         </div>
@@ -331,7 +340,6 @@ export default function OrdersPage() {
                 </span>
               </div>
             </div>
-
             <div className="pt-2 flex items-center justify-end gap-3 border-t border-neutral-200">
               <button
                 onClick={() => window.print()}

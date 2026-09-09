@@ -33,6 +33,7 @@ export default function CreateProductPage() {
   const [origin, setOrigin] = useState("Speyside, Scotland");
   const [category, setCategory] = useState("Whiskey");
   const [priceUGX, setPriceUGX] = useState("314500");
+  const [buyingPriceUGX, setBuyingPriceUGX] = useState("0");
   const [volume, setVolume] = useState("750 ml");
   const [abv, setAbv] = useState("40.0% ABV");
   const [stockQuantity, setStockQuantity] = useState("50");
@@ -123,6 +124,7 @@ export default function CreateProductPage() {
           origin,
           category,
           priceUGX: Number(priceUGX || 0),
+          buyingPriceUGX: Number(buyingPriceUGX || 0),
           numericPrice: Number((Number(priceUGX || 0) / 3700).toFixed(2)),
           stockQuantity: Number(stockQuantity || 50),
           abv: abv || "40.0% ABV",
@@ -429,7 +431,7 @@ export default function CreateProductPage() {
             3. Pricing & Technical Specs
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             <div className="space-y-1.5">
               <label className="font-bold text-[#18181b] block">Price in UGX *</label>
               <input
@@ -444,6 +446,21 @@ export default function CreateProductPage() {
               <span className="text-[11px] text-[#71717a]">
                 ≈ USD ${(Number(priceUGX || 0) / 3700).toFixed(2)}
               </span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="font-bold text-[#18181b] block">Buying Price in UGX *</label>
+              <input
+                type="number"
+                required
+                min="0"
+                value={buyingPriceUGX}
+                onChange={(e) => setBuyingPriceUGX(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
+                placeholder="e.g. 250000"
+                className="w-full h-11 rounded-2xl border border-[#e5e5e4] bg-white px-4 text-xs text-[#18181b] font-semibold outline-none focus:border-[#b8860b] transition shadow-2xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <span className="text-[11px] text-[#71717a]">Cost before sale</span>
             </div>
 
             <div className="space-y-1.5">

@@ -31,6 +31,9 @@ interface OrderItem {
   quantity: number;
   unitPriceUSD: number;
   subtotalUSD: number;
+  unitBuyingPriceUGX?: number;
+  grossProfitUGX?: number;
+  developerProfitShareUGX?: number;
 }
 
 interface Order {
@@ -274,6 +277,16 @@ export default function DashboardOverviewPage() {
   // LIVE FINANCIAL CALCULATIONS BASED ON ORDERS
   const finances = useMemo(() => {
     const validOrders = filteredOrders.filter((o) => o.orderStatus !== "Cancelled");
+    const completedOrders = validOrders.filter((o) => o.orderStatus === "Delivered");
+    const productCosts = new Map(productsList.map((product) => [product.name.toLowerCase(), product.buyingPrice || 0]));
+
+    const getOrderGrossProfitUGX = (order: Order) =>
+      order.items.reduce((sum, item) => {
+        if (typeof item.grossProfitUGX === "number") return sum + item.grossProfitUGX;
+        const buyingPrice = item.unitBuyingPriceUGX ?? productCosts.get(item.productName.toLowerCase()) ?? 0;
+        const sellingPriceUGX = item.unitPriceUSD * 3700;
+        return sum + Math.max(0, Math.round(sellingPriceUGX - buyingPrice) * item.quantity);
+      }, 0);
 
     // Total Gross Sales (UGX)
     const totalSalesUGX = validOrders.reduce(
@@ -286,27 +299,31 @@ export default function DashboardOverviewPage() {
       .filter((o) => o.paymentStatus === "Paid" || o.orderStatus === "Delivered")
       .reduce((sum, o) => sum + (o.totalAmountUGX || o.totalAmountUSD * 3700), 0);
 
-    // 10% Developer Platform Agreement Commission (UGX)
-    const developerCommissionRate = 0.10;
-    const developerCommissionUGX = Math.round(totalSalesUGX * developerCommissionRate);
-    const developerCommissionUSD = Number(((totalSalesUGX * developerCommissionRate) / 3700).toFixed(2));
+    const completedSalesUGX = completedOrders.reduce(
+      (sum, o) => sum + (o.totalAmountUGX || o.totalAmountUSD * 3700),
+      0
+    );
+    const totalGrossProfitUGX = completedOrders.reduce((sum, order) => sum + getOrderGrossProfitUGX(order), 0);
+    const developerCommissionRate = 0.25;
+    const developerCommissionUGX = Math.round(totalGrossProfitUGX * developerCommissionRate);
+    const developerCommissionUSD = Number((developerCommissionUGX / 3700).toFixed(2));
     
     // Developer Commission on collected funds vs pending invoices
-    const developerPaidCommissionUGX = Math.round(totalReceivedUGX * developerCommissionRate);
+    const developerPaidCommissionUGX = developerCommissionUGX;
     
     // Uncollected Invoices / Pending Orders (UGX)
     const invoicesUGX = validOrders
       .filter((o) => o.paymentStatus === "Pending" && o.orderStatus !== "Delivered")
       .reduce((sum, o) => sum + (o.totalAmountUGX || o.totalAmountUSD * 3700), 0);
 
-    const developerPendingCommissionUGX = Math.round(invoicesUGX * developerCommissionRate);
+    const developerPendingCommissionUGX = 0;
 
-    // Store Owner Net Revenue (90%)
-    const storeNetPayoutUGX = Math.round(totalSalesUGX * (1 - developerCommissionRate));
-    const storeNetReceivedUGX = Math.round(totalReceivedUGX * (1 - developerCommissionRate));
+    // Store owner retains the remaining 75% of completed gross profit.
+    const storeNetPayoutUGX = Math.max(0, totalGrossProfitUGX - developerCommissionUGX);
+    const storeNetReceivedUGX = storeNetPayoutUGX;
 
-    // Net Liquid Cash at Hand (Total Received minus developer 10% share)
-    const cashAtHandUGX = Math.max(0, totalReceivedUGX - developerPaidCommissionUGX);
+    // Net liquid cash after the developer's completed-order profit share.
+    const cashAtHandUGX = Math.max(0, completedSalesUGX - developerPaidCommissionUGX);
 
     // Payment Breakdown by Payment Method
     const airtelUGX = validOrders
@@ -336,6 +353,8 @@ export default function DashboardOverviewPage() {
 
     return {
       totalSalesUGX,
+      completedSalesUGX,
+      totalGrossProfitUGX,
       totalReceivedUGX,
       developerCommissionRate,
       developerCommissionUGX,
@@ -351,8 +370,9 @@ export default function DashboardOverviewPage() {
       cardUGX,
       cashPaymentUGX,
       orderCount: validOrders.length,
+      completedOrderCount: completedOrders.length,
     };
-  }, [filteredOrders]);
+  }, [filteredOrders, productsList]);
 
   return (
     <div className="space-y-6">
@@ -439,8 +459,8 @@ export default function DashboardOverviewPage() {
         </div>
       </div>
 
-      {/* 5 PRIMARY FINANCIAL METRICS ROW (Calculated dynamically) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* PRIMARY FINANCIAL METRICS ROW (Calculated dynamically) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         
         {/* 1. Total Sales (100%) */}
         <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
@@ -470,18 +490,54 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* 3. Developer Commission (10% Platform Fee) */}
+        {/* 3. Total Orders */}
+        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#475569] text-white flex items-center justify-center shadow-xs">
+            <PackageCheck size={20} />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-[#71717a] block">Total Orders</span>
+            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">{finances.orderCount}</p>
+            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Non-cancelled</span>
+          </div>
+        </div>
+
+        {/* 4. Orders Completed */}
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 flex items-center gap-4 shadow-2xs">
+          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
+            <ShieldCheck size={20} />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-emerald-700 block">Orders Completed</span>
+            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">{finances.completedOrderCount}</p>
+            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Delivered</span>
+          </div>
+        </div>
+
+        {/* 5. Gross Profit */}
+        <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 flex items-center gap-4 shadow-2xs">
+          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
+            <TrendingUp size={20} />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-[#71717a] block">Completed Gross Profit</span>
+            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">{finances.totalGrossProfitUGX.toLocaleString()}</p>
+            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">UGX</span>
+          </div>
+        </div>
+
+        {/* 6. Developer Commission (25% of completed gross profit) */}
         <div className="rounded-2xl border border-[#d4af37]/40 bg-[#fffdf5] p-5 flex items-center gap-4 shadow-xs relative overflow-hidden">
           <div className="absolute top-2 right-2.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-[#b8860b] text-white px-2 py-0.5 text-[9px] font-extrabold tracking-wide uppercase shadow-2xs">
-              Agreement 10%
+              Agreement 25%
             </span>
           </div>
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
             <Code2 size={20} />
           </div>
           <div>
-            <span className="text-[11px] font-bold text-[#b8860b] block">Dev Commission (10%)</span>
+            <span className="text-[11px] font-bold text-[#b8860b] block">Dev Fee (25% Profit)</span>
             <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
               {finances.developerCommissionUGX.toLocaleString()}
             </p>
@@ -492,13 +548,13 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* 4. Store Owner Revenue (90% Net) */}
+        {/* 7. Store Owner Profit (75% of gross profit) */}
         <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
             <Coins size={20} />
           </div>
           <div>
-            <span className="text-[11px] font-semibold text-[#71717a] block">Store Net (90%)</span>
+            <span className="text-[11px] font-semibold text-[#71717a] block">Store Profit (75%)</span>
             <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
               {finances.storeNetPayoutUGX.toLocaleString()}
             </p>
@@ -534,7 +590,7 @@ export default function DashboardOverviewPage() {
                 Developer Platform Commission & Settlement Breakdown
               </h3>
               <p className="text-xs text-[#71717a] mt-0.5">
-                Agreement terms: <span className="font-bold text-[#b8860b]">10.0% fixed commission</span> on all platform gross sales and completed orders.
+                Agreement terms: <span className="font-bold text-[#b8860b]">25% of gross profit</span> from completed (Delivered) orders, settled at month end.
               </p>
             </div>
           </div>
@@ -556,11 +612,12 @@ export default function DashboardOverviewPage() {
           </div>
 
           <div className="rounded-2xl bg-[#fffcf0] p-4 border border-[#f3e5b8] space-y-1 shadow-2xs">
-            <p className="text-[11px] font-bold text-[#b8860b] uppercase tracking-wider">Developer 10% Fee</p>
+            <p className="text-[11px] font-bold text-[#b8860b] uppercase tracking-wider">Developer 25% Profit Share</p>
             <p className="font-sans text-xl font-extrabold text-[#b8860b]">
               UGX {finances.developerCommissionUGX.toLocaleString()}
             </p>
             <p className="text-[10px] text-[#854d0e] font-semibold">Total payout due to developer</p>
+            <p className="text-[10px] text-[#71717a]">Base: UGX {finances.totalGrossProfitUGX.toLocaleString()} completed gross profit</p>
           </div>
 
           <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
@@ -568,25 +625,25 @@ export default function DashboardOverviewPage() {
             <p className="font-sans text-xl font-extrabold text-[#16a34a]">
               UGX {finances.developerPaidCommissionUGX.toLocaleString()}
             </p>
-            <p className="text-[10px] text-[#71717a]">10% fee from already paid/delivered sales</p>
+            <p className="text-[10px] text-[#71717a]">Based on {finances.completedOrderCount} completed orders</p>
           </div>
 
           <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
-            <p className="text-[11px] font-bold text-[#18181b] uppercase tracking-wider">Store Net Retained (90%)</p>
+            <p className="text-[11px] font-bold text-[#18181b] uppercase tracking-wider">Store Profit Retained (75%)</p>
             <p className="font-sans text-xl font-extrabold text-[#18181b]">
               UGX {finances.storeNetPayoutUGX.toLocaleString()}
             </p>
-            <p className="text-[10px] text-[#71717a]">Net revenue retained by Magnum owners</p>
+            <p className="text-[10px] text-[#71717a]">Remaining completed gross profit after developer share</p>
           </div>
         </div>
 
         <div className="rounded-2xl bg-white/70 border border-[#ebdcb2]/60 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs font-extrabold bg-[#f4f4f3] px-2 py-0.5 rounded border border-[#e4e4e7] text-[#18181b]">
-              FORMULA: Total Sales × 0.10
+              FORMULA: Completed Gross Profit × 0.25
             </span>
             <span className="text-[#71717a]">
-              Calculation automatically updates as customers place orders on the storefront.
+              Calculation updates when orders become Delivered and products have a buying price.
             </span>
           </div>
           <div className="font-sans font-bold text-[#18181b] text-xs">

@@ -6,6 +6,7 @@ export interface Product {
   category: string;
   price: string;
   numericPrice: number;
+  buyingPrice: number;
   oldPrice?: string;
   badge?: string;
   abv: string;
