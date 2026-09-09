@@ -15,6 +15,7 @@ import {
   Play,
   RotateCw,
 } from "lucide-react";
+import { compressImageFile } from "@/utils/media";
 
 export default function CreateProductPage() {
   const router = useRouter();
@@ -70,15 +71,9 @@ export default function CreateProductPage() {
         }
       };
       reader.readAsDataURL(file);
-    } else if (file.type.startsWith("image/")) {
-      setMediaType("image");
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setImage(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+        } else if (file.type.startsWith("image/")) {
+          setMediaType("image");
+          compressImageFile(file).then(setImage).catch(() => setErrorMsg("Unable to process image."));
     }
   };
 

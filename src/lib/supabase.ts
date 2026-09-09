@@ -159,7 +159,7 @@ export async function getProductsFromSupabase(): Promise<SupabaseProductRow[] | 
   try {
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select("id,name,brand,category,country_of_origin,price,volume_ml,abv,quantity_in_stock,description,is_active,image_url,vintage")
       .order("created_at", { ascending: false });
 
     if (error || !data) {

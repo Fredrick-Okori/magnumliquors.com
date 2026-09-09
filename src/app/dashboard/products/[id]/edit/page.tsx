@@ -15,6 +15,7 @@ import {
   Video,
 } from "lucide-react";
 import { Product } from "@/data/products";
+import { compressImageFile } from "@/utils/media";
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -114,15 +115,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         }
       };
       reader.readAsDataURL(file);
-    } else if (file.type.startsWith("image/")) {
-      setMediaType("image");
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setImage(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+        } else if (file.type.startsWith("image/")) {
+          setMediaType("image");
+          compressImageFile(file).then(setImage).catch(() => setErrorMsg("Unable to process image."));
     }
   };
 

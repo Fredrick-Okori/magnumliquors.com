@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowUpRight,
   CheckCircle2,
@@ -85,7 +86,7 @@ export default function Home() {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch("/api/store-products")
+    fetch("/api/store-products", { cache: "force-cache" })
       .then((res) => res.json())
       .then((data) => {
         const apiList = Array.isArray(data) ? data : [];
@@ -213,7 +214,7 @@ export default function Home() {
             </div>
           ) : visibleProducts.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-              {visibleProducts.map((product) => (
+              {visibleProducts.map((product, index) => (
                 <article
                   key={product.id}
                   className={`group relative flex flex-col justify-between rounded-3xl border p-4 transition-all duration-300 hover:-translate-y-1 ${
@@ -267,11 +268,22 @@ export default function Home() {
                         objectFit="cover"
                         className="h-full w-full"
                       />
-                    ) : (
+                    ) : product.image.startsWith("data:") ? (
                       <img
                         src={product.image}
                         alt={product.name}
+                        loading={index < 3 ? "eager" : "lazy"}
+                        decoding="async"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        priority={index < 3}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     )}
                   </Link>

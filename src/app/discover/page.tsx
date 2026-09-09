@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -431,7 +432,7 @@ function DiscoverContent() {
               </div>
             ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredProducts.map((product) => (
+                {filteredProducts.map((product, index) => (
                   <article
                     key={product.id}
                     className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
@@ -468,13 +469,22 @@ function DiscoverContent() {
                           objectFit="cover"
                           className="h-full w-full"
                         />
-                      ) : (
+                      ) : product.image.startsWith("data:") ? (
                         <img
                           src={product.image}
                           alt={product.name}
-                          loading="lazy"
+                          loading={index < 3 ? "eager" : "lazy"}
                           decoding="async"
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          priority={index < 3}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       )}
                     </Link>

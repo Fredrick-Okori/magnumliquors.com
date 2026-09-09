@@ -87,14 +87,14 @@ export async function GET() {
 
     return NextResponse.json(finalProducts, {
       headers: {
-        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
+        "Cache-Control": "public, max-age=30, s-maxage=30, stale-while-revalidate=120",
       },
     });
   } catch (error) {
     console.error("GET store-products error:", error);
     return NextResponse.json(fallbackCatalog, {
       headers: {
-        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
+        "Cache-Control": "public, max-age=30, s-maxage=30, stale-while-revalidate=120",
       },
     });
   }
