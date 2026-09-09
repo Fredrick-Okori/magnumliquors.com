@@ -56,114 +56,7 @@ interface Order {
   priority?: "High" | "Medium" | "Low";
 }
 
-const initialOrders: Order[] = [
-  {
-    id: "1",
-    orderNumber: "MAG-84920",
-    customerName: "Patrick Mukasa",
-    customerEmail: "p.mukasa@example.com",
-    customerPhone: "+256 772 409 110",
-    deliveryAddress: "Sturrock Road, Acacia Mall, Kampala",
-    orderStatus: "Pending",
-    paymentMethod: "Cash",
-    paymentStatus: "Pending",
-    totalAmountUSD: 249.99,
-    totalAmountUGX: 924963,
-    systemCommissionUGX: 138744,
-    netPayoutUGX: 786219,
-    priority: "High",
-    items: [
-      {
-        productName: "Don Julio 70 Añejo Cristalino",
-        quantity: 1,
-        unitPriceUSD: 249.99,
-        subtotalUSD: 249.99,
-      },
-    ],
-    createdAt: "2026-08-28",
-  },
-  {
-    id: "2",
-    orderNumber: "MAG-71042",
-    customerName: "Sarah Kiconco",
-    customerEmail: "sarah.k@example.com",
-    customerPhone: "+256 701 883 992",
-    deliveryAddress: "Kololo Hill Drive, Plot 14, Kampala",
-    orderStatus: "Out for Delivery",
-    paymentMethod: "MTN Mobile Money",
-    paymentStatus: "Paid",
-    totalAmountUSD: 499.98,
-    totalAmountUGX: 1849926,
-    systemCommissionUGX: 277489,
-    netPayoutUGX: 1572437,
-    priority: "High",
-    items: [
-      {
-        productName: "Macallan 18 Year Double Cask",
-        quantity: 1,
-        unitPriceUSD: 399.99,
-        subtotalUSD: 399.99,
-      },
-      {
-        productName: "Dom Pérignon Vintage 2013",
-        quantity: 1,
-        unitPriceUSD: 99.99,
-        subtotalUSD: 99.99,
-      },
-    ],
-    createdAt: "2026-08-29",
-  },
-  {
-    id: "3",
-    orderNumber: "MAG-60211",
-    customerName: "David Ochieng",
-    customerEmail: "david.o@example.com",
-    customerPhone: "+256 752 119 400",
-    deliveryAddress: "Naguru Avenue, Kampala",
-    orderStatus: "Delivered",
-    paymentMethod: "Visa Card",
-    paymentStatus: "Paid",
-    totalAmountUSD: 149.99,
-    totalAmountUGX: 554963,
-    systemCommissionUGX: 83244,
-    netPayoutUGX: 471719,
-    priority: "Medium",
-    items: [
-      {
-        productName: "Hennessy XO Cognac",
-        quantity: 1,
-        unitPriceUSD: 149.99,
-        subtotalUSD: 149.99,
-      },
-    ],
-    createdAt: "2026-08-27",
-  },
-  {
-    id: "4",
-    orderNumber: "MAG-51928",
-    customerName: "Emmanuel Tumusiime",
-    customerEmail: "e.tumu@example.com",
-    customerPhone: "+256 782 990 114",
-    deliveryAddress: "Muyenga Tank Hill, Kampala",
-    orderStatus: "Delivered",
-    paymentMethod: "Airtel Money",
-    paymentStatus: "Paid",
-    totalAmountUSD: 389.0,
-    totalAmountUGX: 1439300,
-    systemCommissionUGX: 215895,
-    netPayoutUGX: 1223405,
-    priority: "Low",
-    items: [
-      {
-        productName: "Johnnie Walker Blue Label",
-        quantity: 1,
-        unitPriceUSD: 389.0,
-        subtotalUSD: 389.0,
-      },
-    ],
-    createdAt: "2026-08-26",
-  },
-];
+const initialOrders: Order[] = [];
 
 export default function DashboardOverviewPage() {
   const { formatAmount } = useCurrency();
@@ -232,10 +125,7 @@ export default function DashboardOverviewPage() {
       }
 
       if (fetchedOrders.length > 0) {
-        // Merge with initial fallback seed ensuring no duplicate IDs
-        const existingIds = new Set(fetchedOrders.map((o) => o.orderNumber));
-        const nonDuplicateInitial = initialOrders.filter((io) => !existingIds.has(io.orderNumber));
-        setOrders([...fetchedOrders, ...nonDuplicateInitial]);
+        setOrders(fetchedOrders);
       }
     } catch (err) {
       console.warn("Failed to fetch dashboard data:", err);
@@ -287,6 +177,11 @@ export default function DashboardOverviewPage() {
         const sellingPriceUGX = item.unitPriceUSD * 3700;
         return sum + Math.max(0, Math.round(sellingPriceUGX - buyingPrice) * item.quantity);
       }, 0);
+
+    const grossStockUGX = productsList.reduce(
+      (sum, product) => sum + Math.round(product.numericPrice * 3700) * (product.stockQuantity ?? 0),
+      0
+    );
 
     // Total Gross Sales (UGX)
     const totalSalesUGX = validOrders.reduce(
@@ -353,6 +248,7 @@ export default function DashboardOverviewPage() {
 
     return {
       totalSalesUGX,
+      grossStockUGX,
       completedSalesUGX,
       totalGrossProfitUGX,
       totalReceivedUGX,
@@ -460,30 +356,30 @@ export default function DashboardOverviewPage() {
       </div>
 
       {/* PRIMARY FINANCIAL METRICS ROW (Calculated dynamically) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         
-        {/* 1. Total Sales (100%) */}
-        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+        {/* 1. Gross Stock: current selling-price value of inventory */}
+        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
             <TrendingUp size={20} />
           </div>
-          <div>
-            <span className="text-[11px] font-semibold text-[#71717a] block">Gross Sales (100%)</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-              {finances.totalSalesUGX.toLocaleString()}
+          <div className="min-w-0">
+            <span className="block text-[11px] font-semibold text-[#71717a]">Gross Stock</span>
+            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+              {finances.grossStockUGX.toLocaleString()}
             </p>
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
           </div>
         </div>
 
         {/* 2. Total Received */}
-        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
             <CreditCard size={20} />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[11px] font-semibold text-[#71717a] block">Total Received</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
               {finances.totalReceivedUGX.toLocaleString()}
             </p>
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
@@ -491,44 +387,44 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* 3. Total Orders */}
-        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#475569] text-white flex items-center justify-center shadow-xs">
             <PackageCheck size={20} />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[11px] font-semibold text-[#71717a] block">Total Orders</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">{finances.orderCount}</p>
+            <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.orderCount}</p>
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Non-cancelled</span>
           </div>
         </div>
 
         {/* 4. Orders Completed */}
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 flex items-center gap-4 shadow-2xs">
+        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
             <ShieldCheck size={20} />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[11px] font-semibold text-emerald-700 block">Orders Completed</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">{finances.completedOrderCount}</p>
+            <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.completedOrderCount}</p>
             <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Delivered</span>
           </div>
         </div>
 
         {/* 5. Gross Profit */}
-        <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 flex items-center gap-4 shadow-2xs">
+        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
             <TrendingUp size={20} />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[11px] font-semibold text-[#71717a] block">Completed Gross Profit</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">{finances.totalGrossProfitUGX.toLocaleString()}</p>
+            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.totalGrossProfitUGX.toLocaleString()}</p>
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">UGX</span>
           </div>
         </div>
 
         {/* 6. Developer Commission (25% of completed gross profit) */}
-        <div className="rounded-2xl border border-[#d4af37]/40 bg-[#fffdf5] p-5 flex items-center gap-4 shadow-xs relative overflow-hidden">
-          <div className="absolute top-2 right-2.5">
+        <div className="relative flex min-w-0 min-h-[132px] items-center gap-4 overflow-hidden rounded-2xl border border-[#d4af37]/40 bg-[#fffdf5] p-5 pt-10 shadow-xs sm:pt-5">
+          <div className="absolute right-2.5 top-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-[#b8860b] text-white px-2 py-0.5 text-[9px] font-extrabold tracking-wide uppercase shadow-2xs">
               Agreement 25%
             </span>
@@ -536,9 +432,9 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
             <Code2 size={20} />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[11px] font-bold text-[#b8860b] block">Dev Fee (25% Profit)</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
               {finances.developerCommissionUGX.toLocaleString()}
             </p>
             <div className="flex items-center gap-1 text-[10px] text-[#71717a] font-sans">
@@ -549,13 +445,13 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* 7. Store Owner Profit (75% of gross profit) */}
-        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
             <Coins size={20} />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[11px] font-semibold text-[#71717a] block">Store Profit (75%)</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
               {finances.storeNetPayoutUGX.toLocaleString()}
             </p>
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
@@ -563,13 +459,13 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* 5. Invoices (Pending Accounts) */}
-        <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-xs">
             <FileText size={20} />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[11px] font-semibold text-[#71717a] block">Invoices (Pending)</span>
-            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
               {finances.invoicesUGX.toLocaleString()}
             </p>
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
@@ -608,7 +504,7 @@ export default function DashboardOverviewPage() {
             <p className="font-sans text-xl font-extrabold text-[#18181b]">
               UGX {finances.totalSalesUGX.toLocaleString()}
             </p>
-            <p className="text-[10px] text-[#71717a]">100% of order totals across {finances.orderCount} orders</p>
+            <p className="text-[10px] text-[#71717a]">Selling-price value of {productsList.reduce((sum, product) => sum + (product.stockQuantity ?? 0), 0).toLocaleString()} bottles in stock</p>
           </div>
 
           <div className="rounded-2xl bg-[#fffcf0] p-4 border border-[#f3e5b8] space-y-1 shadow-2xs">

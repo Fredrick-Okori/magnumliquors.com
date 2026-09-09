@@ -32,13 +32,7 @@ export default function AnalyticsPage() {
       if (data?.docs && Array.isArray(data.docs) && data.docs.length > 0) {
         setOrders(data.docs);
       } else {
-        // Fallback realistic baseline if database orders table is fresh
-        setOrders([
-          { id: "1", totalAmountUSD: 249.99, totalAmountUGX: 924963, orderStatus: "Pending", items: [{ productName: "Don Julio 70 Añejo Cristalino", quantity: 1, unitPriceUSD: 249.99, subtotalUSD: 249.99 }] },
-          { id: "2", totalAmountUSD: 499.98, totalAmountUGX: 1849926, orderStatus: "Delivered", items: [{ productName: "Macallan 18 Year Double Cask", quantity: 1, unitPriceUSD: 399.99, subtotalUSD: 399.99 }] },
-          { id: "3", totalAmountUSD: 149.99, totalAmountUGX: 554963, orderStatus: "Delivered", items: [{ productName: "Hennessy XO Cognac", quantity: 1, unitPriceUSD: 149.99, subtotalUSD: 149.99 }] },
-          { id: "4", totalAmountUSD: 389.0, totalAmountUGX: 1439300, orderStatus: "Delivered", items: [{ productName: "Johnnie Walker Blue Label", quantity: 1, unitPriceUSD: 389.0, subtotalUSD: 389.0 }] },
-        ]);
+        setOrders([]);
       }
     } catch (err) {
       console.warn("Failed to fetch analytics orders:", err);

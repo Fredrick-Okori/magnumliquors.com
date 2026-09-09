@@ -33,73 +33,7 @@ interface Order {
   createdAt: string;
 }
 
-const initialOrders: Order[] = [
-  {
-    id: "ord-101",
-    orderNumber: "#MAG-8821",
-    customerName: "Patrick Mugisha",
-    customerPhone: "+256 772 123456",
-    deliveryAddress: "Sturrock Road, Acacia Mall, Kampala",
-    orderStatus: "Out for Delivery",
-    paymentMethod: "MTN MoMo",
-    paymentStatus: "Paid",
-    totalAmountUSD: 280.0,
-    totalAmountUGX: 1036000,
-    commissionRate: 0.15,
-    systemCommissionUSD: 42.0,
-    systemCommissionUGX: 155400,
-    netPayoutUSD: 238.0,
-    netPayoutUGX: 880600,
-    items: [
-      { productName: "Don Julio 70 Añejo Cristalino", quantity: 2, unitPriceUSD: 85.0, subtotalUSD: 170.0 },
-      { productName: "Hennessy VS Cognac", quantity: 2, unitPriceUSD: 55.0, subtotalUSD: 110.0 },
-    ],
-    createdAt: "2026-08-26 10:15 AM",
-  },
-  {
-    id: "ord-102",
-    orderNumber: "#MAG-8822",
-    customerName: "Sarah Kintu",
-    customerPhone: "+256 701 987654",
-    deliveryAddress: "Kololo Heights, Kampala",
-    orderStatus: "Processing",
-    paymentMethod: "Airtel Money",
-    paymentStatus: "Paid",
-    totalAmountUSD: 195.0,
-    totalAmountUGX: 721500,
-    commissionRate: 0.15,
-    systemCommissionUSD: 29.25,
-    systemCommissionUGX: 108225,
-    netPayoutUSD: 165.75,
-    netPayoutUGX: 613275,
-    items: [
-      { productName: "Don Julio 1942 Extra Añejo", quantity: 1, unitPriceUSD: 195.0, subtotalUSD: 195.0 },
-    ],
-    createdAt: "2026-08-26 11:30 AM",
-  },
-  {
-    id: "ord-103",
-    orderNumber: "#MAG-8823",
-    customerName: "David Ochieng",
-    customerPhone: "+256 782 555123",
-    deliveryAddress: "Nakasero Road, Kampala",
-    orderStatus: "Delivered",
-    paymentMethod: "Visa Card",
-    paymentStatus: "Paid",
-    totalAmountUSD: 407.0,
-    totalAmountUGX: 1505900,
-    commissionRate: 0.15,
-    systemCommissionUSD: 61.05,
-    systemCommissionUGX: 225885,
-    netPayoutUSD: 345.95,
-    netPayoutUGX: 1280015,
-    items: [
-      { productName: "Ruinart Blanc de Blancs", quantity: 3, unitPriceUSD: 110.0, subtotalUSD: 330.0 },
-      { productName: "Glenfiddich 18 Year Single Malt", quantity: 1, unitPriceUSD: 130.0, subtotalUSD: 130.0 },
-    ],
-    createdAt: "2026-08-25 04:45 PM",
-  },
-];
+const initialOrders: Order[] = [];
 
 export default function OrdersPage() {
   const { formatAmount } = useCurrency();
@@ -131,7 +65,6 @@ export default function OrdersPage() {
       const combined = [
         ...localOrders,
         ...apiOrders.filter((ao) => !localOrders.some((lo) => lo.orderNumber === ao.orderNumber)),
-        ...initialOrders.filter((io) => !apiOrders.some((ao) => ao.orderNumber === io.orderNumber) && !localOrders.some((lo) => lo.orderNumber === io.orderNumber)),
       ];
 
       setOrders(combined);
