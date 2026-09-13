@@ -76,9 +76,8 @@ export default function ProductDetailClient({
         const data = await res.json();
         const apiList: Product[] = Array.isArray(data) ? data : [];
 
-        let localProducts: Product[] = [];
         try {
-          localProducts = JSON.parse(localStorage.getItem("magnum_added_products") || "[]");
+          localStorage.removeItem("magnum_added_products");
         } catch (e) {}
 
         let deletedIds = new Set<string>();
@@ -87,11 +86,7 @@ export default function ProductDetailClient({
           deletedIds = new Set(raw ? JSON.parse(raw) : []);
         } catch (e) {}
 
-        // Combine API and local products without duplicates
-        const allProducts = [
-          ...localProducts,
-          ...apiList.filter((ap) => !localProducts.some((lp) => String(lp.id) === String(ap.id))),
-        ].filter((p) => !deletedIds.has(String(p.id)));
+        const allProducts = apiList.filter((p) => !deletedIds.has(String(p.id)));
 
         if (!isMounted) return;
 

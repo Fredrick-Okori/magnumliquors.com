@@ -52,18 +52,14 @@ export default function ProductsPage() {
       const data = await res.json();
       const apiList = Array.isArray(data) ? data : [];
 
-      let localProducts: Product[] = [];
       try {
-        localProducts = JSON.parse(localStorage.getItem("magnum_added_products") || "[]");
+        localStorage.removeItem("magnum_added_products");
       } catch (e) {}
 
       // Get persisted deleted IDs so they never reappear
       const deletedIds = getDeletedIds();
 
-      const combined = [
-        ...localProducts,
-        ...apiList.filter((ap) => !localProducts.some((lp) => String(lp.id) === String(ap.id))),
-      ].filter((p) => !deletedIds.has(String(p.id)));
+      const combined = apiList.filter((p) => !deletedIds.has(String(p.id)));
 
       setProductsList(combined);
     } catch (err) {
