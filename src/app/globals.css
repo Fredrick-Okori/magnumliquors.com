@@ -57,3 +57,12 @@ button, a { cursor: pointer; }
 .animate-pulse-slow {
   animation: pulse-slow 8s infinite ease-in-out;
 }
+
+/* Prevent iOS Safari auto-zoom on input / textarea focus */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
