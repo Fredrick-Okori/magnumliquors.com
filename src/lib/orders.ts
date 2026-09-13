@@ -31,7 +31,7 @@ export interface Order {
   createdAt: string;
 }
 
-const ORDERS_CACHE_TTL_MS = 30_000; // 30 seconds memory cache
+const ORDERS_CACHE_TTL_MS = 0;
 let ordersCache: { orders: Order[]; expiresAt: number } | null = null;
 let ordersRequest: Promise<Order[]> | null = null;
 let lastKnownGoodOrders: Order[] = [];

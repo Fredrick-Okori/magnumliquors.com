@@ -8,8 +8,8 @@ import { signInManagerWithSupabase } from "@/lib/supabase";
 
 export default function DashboardLoginPage() {
   const router = useRouter();
-  const [loginEmail, setLoginEmail] = useState("manager@magnum.com");
-  const [loginPassword, setLoginPassword] = useState("••••••••");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
@@ -32,8 +32,10 @@ export default function DashboardLoginPage() {
 
     if (user) {
       const email = user.email || loginEmail;
+      const name = String(user.user_metadata?.full_name || user.user_metadata?.name || email.split("@")[0]);
       localStorage.setItem("magnum_dashboard_authenticated", "true");
       localStorage.setItem("magnum_user_email", email);
+      localStorage.setItem("magnum_user_name", name);
       localStorage.setItem("magnum_user_role", String(user.user_metadata?.role || "Manager"));
       if (session?.access_token) {
         localStorage.setItem("magnum_access_token", session.access_token);
@@ -48,7 +50,7 @@ export default function DashboardLoginPage() {
       {/* LEFT SIDE: USER'S IMAGE BANNER */}
       <div className="hidden lg:block relative w-full h-full min-h-screen overflow-hidden bg-neutral-900">
         <img
-          src="/Screenshot 2026-08-22 at 22.19.56.png"
+          src="/Screenshot 2026-08-22 at 22.19.56_converted.avif"
           alt="Magnum Cellar Vault - Luxury Wine & Spirits Merchant"
           loading="eager"
           decoding="async"
@@ -66,7 +68,7 @@ export default function DashboardLoginPage() {
         <div className="my-auto py-8 space-y-8">
           <div className="space-y-2">
             <h1 className="text-4xl font-extrabold text-[#18181b] tracking-tight">
-              Magnum Operations Login
+              Magnum  Login
             </h1>
             <p className="text-sm text-[#52525b] font-medium">
               Log in to access store operations dashboard
@@ -138,7 +140,7 @@ export default function DashboardLoginPage() {
           >
             <ArrowLeft size={14} /> Back to Storefront
           </Link>
-          <span className="text-neutral-400 font-medium">Supabase Auth</span>
+          <span className="text-neutral-400 font-medium">Dashboard Access</span>
         </div>
 
       </div>

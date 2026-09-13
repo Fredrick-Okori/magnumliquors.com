@@ -12,7 +12,7 @@ export async function GET() {
       { docs: orders },
       {
         headers: {
-          "Cache-Control": "private, max-age=15, s-maxage=15, stale-while-revalidate=60",
+          "Cache-Control": "no-store",
         },
       }
     );

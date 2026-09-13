@@ -210,6 +210,7 @@ export default function CartPage() {
       const existingRaw = localStorage.getItem("magnum_placed_orders");
       const existing = existingRaw ? JSON.parse(existingRaw) : [];
       localStorage.setItem("magnum_placed_orders", JSON.stringify([newPlacedOrder, ...existing]));
+      localStorage.setItem("magnum_pending_order_notification", JSON.stringify(newPlacedOrder));
     } catch (e) {
       console.warn("Failed to save placed order locally:", e);
     }
