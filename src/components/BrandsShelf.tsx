@@ -1,7 +1,6 @@
 "use client";
 
 import { ShieldCheck } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
 
 interface Brand {
   name: string;
@@ -24,36 +23,23 @@ const brandLogos: Brand[] = [
 ];
 
 export function BrandsShelf() {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
   return (
     <section
-      className={`relative z-20 border-t py-16 lg:py-24 select-none transition-colors duration-300 ${
-        isDark
-          ? "border-white/10 bg-[#0c0a08] text-[#FAF7F2]"
-          : "border-neutral-200/80 bg-white text-neutral-900"
-      }`}
+      className="relative z-20 border-t border-neutral-200/80 bg-white py-16 text-neutral-900 lg:py-24"
     >
       <div className="mx-auto max-w-7xl px-6 lg:px-12 space-y-12">
         
         {/* Subtitle Badge Header */}
         <div className="flex flex-col items-center text-center space-y-2">
           <div
-            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] ${
-              isDark
-                ? "border-[#b8860b]/40 bg-[#1c1813] text-[#e5c875]"
-                : "border-[#f3e5b8] bg-[#fffcf0] text-[#b8860b]"
-            }`}
+            className="inline-flex items-center gap-2 rounded-full border border-[#f3e5b8] bg-[#fffcf0] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#b8860b]"
           >
-            <ShieldCheck size={13} className={isDark ? "text-[#e5c875]" : "text-[#d4af37]"} />
+            <ShieldCheck size={13} className="text-[#d4af37]" />
             <span>Official Distillery Partners</span>
           </div>
 
           <h2
-            className={`font-serif text-2xl sm:text-3xl font-light tracking-tight ${
-              isDark ? "text-white" : "text-neutral-900"
-            }`}
+            className="font-serif text-2xl font-light tracking-tight text-neutral-900 sm:text-3xl"
           >
             Featured Brands & Distilleries
           </h2>

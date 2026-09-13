@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FileText, Printer, Search, X } from "lucide-react";
-import { useCurrency } from "@/context/CurrencyContext";
+import { formatUGX } from "@/utils/currency";
 
 interface OrderItem {
   productName: string;
@@ -36,7 +36,6 @@ interface Order {
 const initialOrders: Order[] = [];
 
 export default function OrdersPage() {
-  const { formatAmount } = useCurrency();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -201,7 +200,7 @@ export default function OrdersPage() {
 
                         <div className="pt-1 flex flex-wrap items-center gap-4 text-xs font-bold font-sans">
                           <span className="font-sans text-sm font-extrabold text-[#b8860b] tracking-tight">
-                            Total: {formatAmount(order.totalAmountUSD)}
+                            Total: {formatUGX(order.totalAmountUSD)}
                           </span>
                           <span className="text-[#b8860b] text-[10px] font-sans font-bold bg-[#fffcf0] border border-[#f3e5b8] px-2 py-0.5 rounded-full">
                             25% Profit Share: UGX {developerProfitShareUGX.toLocaleString()}
@@ -278,9 +277,9 @@ export default function OrdersPage() {
                   <div key={idx} className="flex items-center justify-between text-xs py-1 border-b border-neutral-100">
                     <div>
                       <p className="font-semibold text-[#18181b]">{item.productName}</p>
-                      <p className="text-[10px] text-[#71717a] font-sans">{item.quantity} x ${item.unitPriceUSD.toFixed(2)}</p>
+                      <p className="text-[10px] text-[#71717a] font-sans">{item.quantity} x {formatUGX(item.unitPriceUSD)}</p>
                     </div>
-                    <p className="font-sans font-extrabold text-[#18181b]">${item.subtotalUSD.toFixed(2)}</p>
+                    <p className="font-sans font-extrabold text-[#18181b]">{formatUGX(item.subtotalUSD)}</p>
                   </div>
                 ))}
               </div>
@@ -288,7 +287,7 @@ export default function OrdersPage() {
               <div className="pt-2 flex items-center justify-between text-sm font-bold border-t border-neutral-200">
                 <span>Grand Total:</span>
                 <span className="font-sans text-xl font-extrabold text-[#b8860b] tracking-tight">
-                  {formatAmount(selectedInvoiceOrder.totalAmountUSD)}
+                  {formatUGX(selectedInvoiceOrder.totalAmountUSD)}
                 </span>
               </div>
             </div>

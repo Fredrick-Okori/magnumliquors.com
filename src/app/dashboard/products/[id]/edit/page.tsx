@@ -505,9 +505,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 placeholder="e.g. 350000"
                 className="w-full h-11 rounded-2xl border border-[#e5e5e4] bg-white px-4 text-xs text-[#18181b] font-semibold outline-none focus:border-[#b8860b] transition shadow-2xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
-              <span className="text-[11px] text-[#71717a]">
-                ≈ USD ${(Number(priceUGX || 0) / 3700).toFixed(2)}
-              </span>
+              <span className="text-[11px] text-[#71717a]">Prices are displayed in Ugandan Shillings.</span>
             </div>
 
             <div className="space-y-1.5">

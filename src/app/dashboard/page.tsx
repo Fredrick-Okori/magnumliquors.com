@@ -23,7 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { Product, products as fallbackProducts } from "@/data/products";
-import { useCurrency } from "@/context/CurrencyContext";
+import { formatUGX } from "@/utils/currency";
 import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
 interface OrderItem {
@@ -59,7 +59,6 @@ interface Order {
 const initialOrders: Order[] = [];
 
 export default function DashboardOverviewPage() {
-  const { formatAmount } = useCurrency();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [productsList, setProductsList] = useState<Product[]>(fallbackProducts);
   const [teamMembersList, setTeamMembersList] = useState<Array<{ id: string; name: string; role: string }>>([]);
@@ -750,7 +749,7 @@ export default function DashboardOverviewPage() {
 
                   <div className="text-right space-y-1">
                     <span className="font-sans text-xs font-bold text-[#b8860b] block">
-                      {formatAmount(order.totalAmountUSD)}
+                      {formatUGX(order.totalAmountUSD)}
                     </span>
                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                       order.orderStatus === "Delivered"
@@ -827,7 +826,7 @@ export default function DashboardOverviewPage() {
 
                     <div className="text-right">
                       <span className="font-sans text-xs font-bold text-[#b8860b] block">
-                        {formatAmount(p.numericPrice)}
+                        {formatUGX(p.numericPrice)}
                       </span>
                       <span className="text-[10px] font-semibold text-[#71717a]">
                         {stock} in stock

@@ -20,7 +20,7 @@ import {
   Wine,
 } from "lucide-react";
 import { useCart } from "@/components/CartContext";
-import { useCurrency } from "@/context/CurrencyContext";
+import { formatUGX } from "@/utils/currency";
 import {
   Product,
   getProductBySlug,
@@ -55,7 +55,6 @@ export default function ProductDetailClient({
   const [stockWarning, setStockWarning] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"tasting" | "specs">("specs");
   const { addToCart, openCart } = useCart();
-  const { formatAmount } = useCurrency();
 
   // Dynamically update document title on client for immediate SEO & tab naming
   useEffect(() => {
@@ -275,7 +274,7 @@ export default function ProductDetailClient({
             {/* Price Block */}
             <div className="mt-6 flex items-baseline gap-3 border-y border-neutral-200/80 py-4">
               <span className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900">
-                {formatAmount(product.numericPrice)}
+                {formatUGX(product.numericPrice)}
               </span>
             </div>
 
@@ -321,7 +320,7 @@ export default function ProductDetailClient({
                 }`}
               >
                 <ShoppingBag size={16} />
-                <span>{added ? "Added to Cart!" : `Add to Cart — ${formatAmount(product.numericPrice * quantity)}`}</span>
+                <span>{added ? "Added to Cart!" : `Add to Cart — ${formatUGX(product.numericPrice * quantity)}`}</span>
               </button>
             </div>
             {stockWarning && (
@@ -482,7 +481,7 @@ export default function ProductDetailClient({
                         {rel.name}
                       </h3>
                     </div>
-                    <span className="text-base font-bold text-neutral-900">{formatAmount(rel.numericPrice)}</span>
+                    <span className="text-base font-bold text-neutral-900">{formatUGX(rel.numericPrice)}</span>
                   </div>
                 </Link>
               ))}

@@ -55,7 +55,7 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="font-bold text-[#18181b] block">USD to UGX Exchange Rate (1 USD = UGX)</label>
+              <label className="font-bold text-[#18181b] block">UGX Pricing and Exchange Rate</label>
               <input
                 type="number"
                 value={exchangeRate}

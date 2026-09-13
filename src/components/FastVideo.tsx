@@ -68,7 +68,7 @@ export function FastVideo({
     <div className={`relative h-full w-full overflow-hidden bg-black/5 ${className}`}>
       {/* Skeleton / Shimmer placeholder while video stream buffers */}
       {!isLoaded && (
-        <div className="absolute inset-0 z-0 animate-pulse bg-neutral-200/50 dark:bg-neutral-800/50" />
+        <div className="absolute inset-0 z-0 animate-pulse bg-neutral-200/50" />
       )}
 
       <video

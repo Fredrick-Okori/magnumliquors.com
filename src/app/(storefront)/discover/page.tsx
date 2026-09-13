@@ -21,7 +21,7 @@ import {
   Wine,
 } from "lucide-react";
 import { useCart } from "@/components/CartContext";
-import { useCurrency } from "@/context/CurrencyContext";
+import { formatUGX } from "@/utils/currency";
 import { Product, productHref } from "@/data/products";
 import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
@@ -64,7 +64,6 @@ function DiscoverContent() {
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const { addToCart, openCart } = useCart();
-  const { formatAmount } = useCurrency();
   const [addedProduct, setAddedProduct] = useState<string | null>(null);
   const [productList, setProductList] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -501,7 +500,7 @@ function DiscoverContent() {
                           <span className="text-[10px] uppercase tracking-wider text-neutral-400">Price</span>
                           <div className="flex items-baseline gap-1.5">
                             <span className="font-sans text-sm sm:text-base font-bold tracking-tight text-neutral-900">
-                              {formatAmount(product.numericPrice)}
+                              {formatUGX(product.numericPrice)}
                             </span>
                           </div>
                         </div>

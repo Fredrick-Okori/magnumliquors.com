@@ -29,8 +29,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useCart } from "./CartContext";
-import { useCurrency } from "@/context/CurrencyContext";
-import { useTheme } from "@/context/ThemeContext";
+import { formatUGX } from "@/utils/currency";
 import { FastVideo, isVideoMedia } from "./FastVideo";
 
 const FREE_DELIVERY_THRESHOLD_USD = 150;
@@ -56,8 +55,7 @@ export function Cart({
   open: boolean;
   onClose: () => void;
 }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = false;
 
   const {
     items,
@@ -69,7 +67,6 @@ export function Cart({
     clearCart,
   } = useCart();
 
-  const { formatAmount } = useCurrency();
 
   // Multi-step Checkout State
   const [step, setStep] = useState<"bag" | "checkout" | "success">("bag");
@@ -352,7 +349,7 @@ export function Cart({
                   {amountNeededForFreeDelivery <= 0 ? (
                     <span className="text-emerald-600 dark:text-emerald-400">Unlocked Free VIP Express Delivery!</span>
                   ) : (
-                    <span>Add {formatAmount(amountNeededForFreeDelivery)} more for Free Express Delivery</span>
+                    <span>Add {formatUGX(amountNeededForFreeDelivery)} more for Free Express Delivery</span>
                   )}
                 </span>
                 <span className="font-mono text-[10px] text-neutral-400">{deliveryProgress}%</span>
@@ -439,37 +436,45 @@ export function Cart({
                         {item.name}
                       </h4>
                       <p className="font-sans text-xs font-bold text-neutral-400">
-                        {formatAmount(item.numericPrice)} <span className="font-normal text-[10px]">/ bottle</span>
+                        {formatUGX(item.numericPrice)} <span className="font-normal text-[10px]">/ bottle</span>
                       </p>
                     </div>
 
                     {/* Quantity Selector & Item Subtotal */}
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <span className={`font-sans text-sm font-extrabold tracking-tight ${isDark ? "text-white" : "text-neutral-900"}`}>
-                        {formatAmount(item.numericPrice * item.quantity)}
+                        {formatUGX(item.numericPrice * item.quantity)}
                       </span>
 
                       <div
-                        className={`flex items-center gap-2 rounded-full border px-2 py-0.5 text-xs shadow-2xs ${
-                          isDark ? "border-white/15 bg-[#1e1a15]" : "border-neutral-200 bg-neutral-100"
+                        className={`flex items-center gap-1.5 rounded-full border p-1 text-xs shadow-2xs ${
+                          isDark ? "border-white/15 bg-[#1e1a15]" : "border-neutral-200 bg-neutral-50"
                         }`}
                       >
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           aria-label="Decrease bottle quantity"
-                          className="p-1 text-neutral-400 hover:text-white transition"
+                          className={`h-7 w-7 flex items-center justify-center rounded-full transition active:scale-90 font-bold ${
+                            isDark
+                              ? "text-neutral-300 hover:bg-white/10 hover:text-white"
+                              : "text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900"
+                          }`}
                         >
-                          <Minus size={11} />
+                          <Minus size={12} />
                         </button>
-                        <span className={`w-3.5 text-center font-sans text-xs font-extrabold ${isDark ? "text-white" : "text-neutral-900"}`}>
+                        <span className={`min-w-[18px] text-center font-sans text-xs font-extrabold ${isDark ? "text-white" : "text-neutral-900"}`}>
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           aria-label="Increase bottle quantity"
-                          className="p-1 text-neutral-400 hover:text-white transition"
+                          className={`h-7 w-7 flex items-center justify-center rounded-full transition active:scale-90 font-bold ${
+                            isDark
+                              ? "text-neutral-300 hover:bg-white/10 hover:text-white"
+                              : "text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900"
+                          }`}
                         >
-                          <Plus size={11} />
+                          <Plus size={12} />
                         </button>
                       </div>
                     </div>
@@ -541,7 +546,7 @@ export function Cart({
                       <Receipt size={13} className="text-[#b8860b]" /> Bottles Subtotal ({count})
                     </span>
                     <span className={`font-sans font-bold ${isDark ? "text-white" : "text-neutral-900"}`}>
-                      {formatAmount(subtotal)}
+                      {formatUGX(subtotal)}
                     </span>
                   </div>
 
@@ -550,7 +555,7 @@ export function Cart({
                       <span className="flex items-center gap-1.5">
                         <Tag size={13} /> VIP Promo Discount ({(appliedDiscount * 100)}%)
                       </span>
-                      <span>-{formatAmount(discountAmount)}</span>
+                      <span>-{formatUGX(discountAmount)}</span>
                     </div>
                   )}
 
@@ -566,14 +571,14 @@ export function Cart({
                   <div className="flex items-center justify-between">
                     <span className="text-neutral-400">Estimated Tax & Vault Fees</span>
                     <span className={`font-sans font-bold ${isDark ? "text-white" : "text-neutral-900"}`}>
-                      {formatAmount(estimatedTax)}
+                      {formatUGX(estimatedTax)}
                     </span>
                   </div>
 
                   <div className="border-t pt-2 flex items-center justify-between border-inherit">
                     <span className={`text-sm font-bold ${isDark ? "text-white" : "text-neutral-900"}`}>Total Due</span>
                     <span className="font-sans text-xl font-extrabold text-[#b8860b]">
-                      {formatAmount(calculatedGrandTotal)}
+                      {formatUGX(calculatedGrandTotal)}
                     </span>
                   </div>
                 </div>
@@ -814,7 +819,7 @@ export function Cart({
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-neutral-400">Total Order Amount</span>
                 <span className="font-sans text-xl font-extrabold text-[#b8860b]">
-                  {formatAmount(calculatedGrandTotal)}
+                  {formatUGX(calculatedGrandTotal)}
                 </span>
               </div>
 
@@ -831,7 +836,7 @@ export function Cart({
                 ) : (
                   <>
                     <Lock size={14} />
-                    <span>Confirm Order — {formatAmount(calculatedGrandTotal)}</span>
+                    <span>Confirm Order — {formatUGX(calculatedGrandTotal)}</span>
                   </>
                 )}
               </button>
@@ -894,7 +899,7 @@ export function Cart({
               <div className="flex justify-between border-t pt-2 border-inherit">
                 <span className="font-bold">Total Settled:</span>
                 <span className="font-sans font-extrabold text-[#b8860b]">
-                  {formatAmount(calculatedGrandTotal)}
+                  {formatUGX(calculatedGrandTotal)}
                 </span>
               </div>
             </div>

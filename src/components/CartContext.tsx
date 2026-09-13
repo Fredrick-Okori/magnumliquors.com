@@ -80,7 +80,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const targetId = targetProduct.id || "1";
     const name = targetProduct.name || "Muga Reserva 2019";
     const producer = targetProduct.producer || "Bodegas Muga";
-    const price = targetProduct.price || "$24.99";
+    const price = targetProduct.price || "UGX 94,590";
     const numericPrice =
       targetProduct.numericPrice ||
       parseFloat(price.replace(/[^0-9.]/g, "")) ||

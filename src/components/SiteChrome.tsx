@@ -2,8 +2,6 @@
 
 import { Footer } from "./Footer";
 import { CartProvider, useCart } from "./CartContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { CurrencyProvider } from "@/context/CurrencyContext";
 import { Navbar } from "./Navbar";
 import { AgeGate } from "./AgeGate";
 import { ScrollBrandBanner } from "./ScrollBrandBanner";
@@ -27,13 +25,5 @@ function ChromeContent({ children }: { children: React.ReactNode }) {
 }
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
-  return (
-    <ThemeProvider>
-      <CurrencyProvider>
-        <CartProvider>
-          <ChromeContent>{children}</ChromeContent>
-        </CartProvider>
-      </CurrencyProvider>
-    </ThemeProvider>
-  );
+  return <CartProvider><ChromeContent>{children}</ChromeContent></CartProvider>;
 }

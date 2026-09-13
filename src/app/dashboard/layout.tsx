@@ -23,7 +23,6 @@ import {
   X,
 } from "lucide-react";
 import { signOutManagerFromSupabase } from "@/lib/supabase";
-import { CurrencyProvider } from "@/context/CurrencyContext";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -141,13 +140,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!isAuthenticated) {
     return (
-      <CurrencyProvider>
-        <div className="flex min-h-screen items-center justify-center bg-[#f7f7f6] p-8">
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f7f6] p-8">
           <div className="flex items-center gap-3 text-xs font-semibold text-[#71717a]">
             <RefreshCw size={16} className="animate-spin text-[#b8860b]" /> Redirecting to Login...
           </div>
-        </div>
-      </CurrencyProvider>
+      </div>
     );
   }
 
@@ -215,8 +212,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <CurrencyProvider>
-      <div className="flex h-screen bg-[#f7f7f6] text-[#18181b] font-sans antialiased overflow-hidden">
+    <div className="flex h-screen bg-[#f7f7f6] text-[#18181b] font-sans antialiased overflow-hidden">
       
       {/* SIDEBAR NAVIGATION */}
       <aside className="w-64 shrink-0 border-r border-[#e5e5e4] bg-white flex flex-col justify-between p-5 overflow-y-auto scrollbar-none">
@@ -409,6 +405,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       </div>
-    </CurrencyProvider>
   );
 }

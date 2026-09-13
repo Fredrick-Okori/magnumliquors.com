@@ -18,8 +18,7 @@ import {
 import { Hero } from "@/components/Hero";
 import { BrandsShelf } from "@/components/BrandsShelf";
 import { useCart } from "@/components/CartContext";
-import { useCurrency } from "@/context/CurrencyContext";
-import { useTheme } from "@/context/ThemeContext";
+import { formatUGX } from "@/utils/currency";
 import { products, Product, productHref } from "@/data/products";
 import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
@@ -72,8 +71,7 @@ function ProductCardSkeleton({ isDark }: { isDark: boolean }) {
 }
 
 export default function Home() {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = false;
 
   const [activeCategory, setActiveCategory] = useState("All bottles");
   const [query, setQuery] = useState("");
@@ -82,7 +80,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   const { addToCart, openCart } = useCart();
-  const { formatAmount } = useCurrency();
 
   useEffect(() => {
     setIsLoading(true);
@@ -299,7 +296,7 @@ export default function Home() {
                           isDark ? "text-[#FAF7F2]" : "text-neutral-900"
                         }`}
                       >
-                        {formatAmount(product.numericPrice)}
+                        {formatUGX(product.numericPrice)}
                       </span>
                       <button
                         onClick={(e) => {

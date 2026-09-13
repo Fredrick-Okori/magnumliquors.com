@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Check, Cookie, Settings, X } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
 
 const STORAGE_KEY = "magnum_cookie_consent";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -41,8 +40,7 @@ export function CookieConsent() {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = false;
 
   useEffect(() => {
     setMounted(true);
@@ -71,19 +69,11 @@ export function CookieConsent() {
   return (
     <aside
       aria-label="Cookie consent banner"
-      className={`fixed inset-x-4 bottom-4 z-[99999] pointer-events-auto rounded-3xl border p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.4)] sm:inset-x-auto sm:right-6 sm:max-w-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-5 ${
-        isDark
-          ? "border-white/15 bg-[#14120f] text-[#FAF7F2]"
-          : "border-neutral-200/90 bg-white text-neutral-900"
-      }`}
+      className="fixed inset-x-4 bottom-4 z-[99999] pointer-events-auto rounded-3xl border border-neutral-200/90 bg-white p-5 text-neutral-900 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-300 animate-in fade-in slide-in-from-bottom-5 sm:inset-x-auto sm:right-6 sm:max-w-md"
     >
       <div className="flex items-start gap-3.5">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${
-            isDark
-              ? "border-[#b8860b]/40 bg-[#1c1813] text-[#e5c875]"
-              : "border-[#f3e5b8] bg-[#fffcf0] text-[#b8860b]"
-          }`}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#f3e5b8] bg-[#fffcf0] text-[#b8860b]"
         >
           <Cookie size={19} />
         </div>
@@ -95,12 +85,12 @@ export function CookieConsent() {
               type="button"
               onClick={() => choose("declined")}
               aria-label="Close cookie notice"
-              className="p-1 text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition cursor-pointer"
+              className="p-1 text-neutral-400 transition hover:text-neutral-900 cursor-pointer"
             >
               <X size={16} />
             </button>
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400 font-light">
+          <p className="mt-1 text-xs leading-relaxed text-neutral-500 font-light">
             We use essential cookies to ensure secure cellar operations and optional analytics to enhance your tasting experience.
           </p>
         </div>
@@ -119,7 +109,7 @@ export function CookieConsent() {
               <strong className={isDark ? "text-white" : "text-neutral-900"}>Essential Cookies</strong>
               <p className="text-[11px] text-neutral-400">Required for cart, auth & vault security.</p>
             </div>
-            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
               Always Active
             </span>
           </div>
@@ -129,7 +119,7 @@ export function CookieConsent() {
               <strong className={isDark ? "text-white" : "text-neutral-900"}>Analytics & Performance</strong>
               <p className="text-[11px] text-neutral-400">Anonymous visitor telemetry & speed metrics.</p>
             </div>
-            <span className="rounded-full bg-neutral-200 dark:bg-neutral-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+            <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
               Optional
             </span>
           </div>

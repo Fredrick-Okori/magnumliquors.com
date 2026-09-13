@@ -114,7 +114,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      data-theme="light"
       className={`h-full antialiased ${cormorant.variable} ${plusJakarta.variable} ${afacadFlux.variable}`}
     >
       <head>

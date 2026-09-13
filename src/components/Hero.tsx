@@ -195,28 +195,7 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Right Vertical Pagination Dots */}
-      <div className="absolute right-6 sm:right-10 top-1/2 z-20 -translate-y-1/2 flex flex-col items-center gap-3">
-        {slides.map((slide, index) => {
-          const isActive = index === current;
-          return (
-            <button
-              key={slide.id}
-              onClick={() => goToSlide(index)}
-              aria-label={`Go to slide ${index + 1}`}
-              className="group flex h-6 w-6 items-center justify-center p-1 transition"
-            >
-              {isActive ? (
-                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-white">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                </span>
-              ) : (
-                <span className="h-1.5 w-1.5 rounded-full bg-white/50 group-hover:bg-white transition" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+    
 
     </section>
   );

@@ -260,7 +260,7 @@ export function HeroNavStrip() {
 
   return (
     <div
-      className="sticky top-[73px] z-30 border-b border-neutral-200/80 bg-white/95 text-neutral-800 backdrop-blur-md select-none transition-colors duration-300"
+      className="sticky top-16 lg:top-[73px] z-30 border-b border-neutral-200/80 bg-white/95 text-neutral-800 backdrop-blur-md select-none transition-colors duration-300"
       onMouseLeave={() => setActiveMenu(null)}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 overflow-x-auto px-5 py-3.5 sm:px-10 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] font-serif scrollbar-none">

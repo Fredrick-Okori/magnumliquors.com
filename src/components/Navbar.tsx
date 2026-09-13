@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "@/context/ThemeContext";
 import { Product, productHref } from "@/data/products";
 
 export function Navbar({
@@ -19,8 +18,6 @@ export function Navbar({
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const router = useRouter();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
 
   useEffect(() => {
     if (!searchOpen || products.length > 0) return;
@@ -53,19 +50,13 @@ export function Navbar({
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b backdrop-blur-md transition-colors duration-300 ${
-        isDark
-          ? "border-white/10 bg-[#0c0a08]/95 text-white"
-          : "border-neutral-200/80 bg-white/95 text-neutral-900"
-      }`}
+      className="sticky top-0 z-40 h-16 lg:h-[73px] border-b border-neutral-200/80 bg-white/95 text-neutral-900 backdrop-blur-md"
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-10">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-5 lg:px-10">
         
         {/* Mobile Hamburger Button */}
         <button
-          className={`lg:hidden p-1 rounded-lg transition ${
-            isDark ? "text-white hover:bg-white/10" : "text-neutral-900 hover:bg-neutral-100"
-          }`}
+          className="lg:hidden rounded-lg p-1 text-neutral-900 transition hover:bg-neutral-100"
           aria-label="Toggle navigation menu"
           onClick={() => setMenuOpen(!menuOpen)}
         >
@@ -91,11 +82,7 @@ export function Navbar({
         <nav
           className={`${
             menuOpen ? "flex" : "hidden"
-          } absolute left-0 top-full z-20 w-full flex-col gap-5 border-b px-6 py-6 text-xs uppercase tracking-[0.18em] shadow-xl lg:static lg:flex lg:w-auto lg:flex-row lg:items-center lg:gap-8 lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none ${
-            isDark
-              ? "bg-[#12100d] border-white/10 text-white"
-              : "bg-white border-neutral-200 text-neutral-900"
-          }`}
+          } absolute left-0 top-full z-20 w-full flex-col gap-5 border-b border-neutral-200 bg-white px-6 py-6 text-xs uppercase tracking-[0.18em] text-neutral-900 shadow-xl lg:static lg:flex lg:w-auto lg:flex-row lg:items-center lg:gap-8 lg:border-none lg:bg-transparent lg:p-0 lg:shadow-none`}
         >
           <Link
             href="/discover"
@@ -161,17 +148,13 @@ export function Navbar({
               aria-label="Search products"
               aria-expanded={searchOpen}
               onClick={() => setSearchOpen((open) => !open)}
-              className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
-                isDark ? "text-white hover:bg-white/10" : "text-neutral-900 hover:bg-neutral-100"
-              }`}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-900 transition hover:bg-neutral-100"
             >
               <Search size={18} />
             </button>
 
             {searchOpen && (
-              <div className={`fixed left-4 right-4 top-20 z-50 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl p-3 shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[22rem] ${
-                isDark ? "bg-[#161310] text-white" : "bg-white text-neutral-900"
-              }`}>
+              <div className="fixed left-4 right-4 top-20 z-50 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl bg-white p-3 text-neutral-900 shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[22rem]">
                 <form id="global-product-search" onSubmit={handleSearchSubmit}>
                   <div className="flex items-center gap-2 rounded-full border border-neutral-200/80 px-3 py-2">
                     <Search size={15} className="shrink-0 text-neutral-400" />

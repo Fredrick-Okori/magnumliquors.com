@@ -12,7 +12,7 @@ import {
   Wine,
 } from "lucide-react";
 import { Product } from "@/data/products";
-import { useCurrency } from "@/context/CurrencyContext";
+import { formatUGX } from "@/utils/currency";
 import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 
 const DELETED_IDS_KEY = "magnum_deleted_product_ids";
@@ -35,7 +35,6 @@ function markDeletedId(id: string) {
 }
 
 export default function ProductsPage() {
-  const { formatAmount } = useCurrency();
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [productCategoryFilter, setProductCategoryFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -234,7 +233,7 @@ export default function ProductsPage() {
                   <h3 className="font-serif text-base font-bold text-[#18181b] truncate mt-1">{p.name}</h3>
                   <p className="text-xs text-[#71717a] truncate">{p.producer} • {p.origin}</p>
                   <p className="font-sans text-base font-extrabold text-[#b8860b] mt-0.5 tracking-tight">
-                    Selling: {formatAmount(p.numericPrice)}
+                    Selling: {formatUGX(p.numericPrice)}
                   </p>
                   <p className="text-[11px] text-[#71717a]">
                     Buying: UGX {p.buyingPrice.toLocaleString()} · Profit: UGX {Math.max(0, Math.round(p.numericPrice * 3700 - p.buyingPrice)).toLocaleString()}

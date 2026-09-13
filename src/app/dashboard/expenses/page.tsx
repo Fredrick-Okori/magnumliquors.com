@@ -20,7 +20,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { useCurrency } from "@/context/CurrencyContext";
+import { formatUGX } from "@/utils/currency";
 
 interface ExpenseItem {
   id: string;
@@ -55,7 +55,6 @@ const CATEGORIES = [
 ] as const;
 
 export default function ExpensesPage() {
-  const { formatAmount } = useCurrency();
   const [expenses, setExpenses] = useState<ExpenseItem[]>(initialExpenses);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
@@ -363,7 +362,7 @@ export default function ExpensesPage() {
                       UGX {exp.amountUGX.toLocaleString()}
                     </p>
                     <span className="text-[11px] font-bold text-[#71717a]">
-                      ~${exp.amountUSD.toFixed(2)} USD
+                      ~{formatUGX(exp.amountUSD)}
                     </span>
                   </div>
 

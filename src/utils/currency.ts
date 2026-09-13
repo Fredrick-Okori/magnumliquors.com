@@ -9,14 +9,4 @@ export function formatUGX(numericUSD: number): string {
   return `UGX ${ugxAmount.toLocaleString()}`;
 }
 
-export function formatUSD(numericUSD: number): string {
-  return `$${numericUSD.toFixed(2)}`;
-}
-
-export function formatPrice(numericUSD: number, currency: "USD" | "UGX" = "UGX"): string {
-  if (currency === "UGX") {
-    return formatUGX(numericUSD);
-  }
-  return formatUSD(numericUSD);
-}
 

@@ -17,7 +17,7 @@ export function StoreJsonLd() {
     telephone: "+256 700 000000",
     email: "concierge@magnumliquors.com",
     priceRange: "$$$$",
-    currenciesAccepted: "UGX, USD",
+    currenciesAccepted: "UGX",
     paymentAccepted: "Cash, Mobile Money, Visa, Mastercard",
     address: {
       "@type": "PostalAddress",
@@ -63,7 +63,6 @@ export function StoreJsonLd() {
   };
 
   const websiteSchema = {
-    "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": `${BASE_URL}/#website`,
     url: BASE_URL,
@@ -137,8 +136,8 @@ export function ProductJsonLd({
     offers: {
       "@type": "Offer",
       url: `${BASE_URL}/product/${product.id}`,
-      priceCurrency: "USD",
-      price: product.numericPrice,
+      priceCurrency: "UGX",
+      price: Math.round(product.numericPrice * 3700),
       itemCondition: "https://schema.org/NewCondition",
       availability: product.inStock !== false
         ? "https://schema.org/InStock"
