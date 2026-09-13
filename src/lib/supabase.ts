@@ -1,17 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+export const supabaseConfig = {
+  // Prefer server-only variables in deployed environments. The public names
+  // remain a local-development fallback for existing .env.local files.
+  url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  anonKey:
+    process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+};
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseConfig.url || !supabaseConfig.anonKey) {
   if (process.env.NODE_ENV === "production") {
-    console.warn("Notice: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured. Falling back to offline fallback catalog.");
+    console.warn("Supabase URL or anon key is not configured.");
   }
 }
 
 export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
-  supabaseAnonKey || "placeholder-anon-key"
+  supabaseConfig.url || "https://placeholder.supabase.co",
+  supabaseConfig.anonKey || "placeholder-anon-key"
 );
 
 export interface SupabaseOrder {
@@ -183,13 +188,13 @@ export async function getProductsFromSupabase(): Promise<SupabaseProductRow[] | 
       .order("created_at", { ascending: false });
 
     if (error || !data) {
-      console.warn("Supabase fetch products notice:", error?.message);
-      return null;
+      throw new Error(error?.message || "Supabase returned no product data");
     }
     return data as SupabaseProductRow[];
   } catch (err) {
-    console.warn("Supabase products fetch exception:", err);
-    return null;
+    const message = err instanceof Error ? err.message : "Supabase product query failed";
+    console.error("Supabase products fetch exception:", message);
+    throw new Error(message);
   }
 }
 

@@ -7,16 +7,17 @@ import {
   parseVolumeMl,
   parseAbvNumeric,
   SupabaseProductRow,
+  supabaseConfig,
 } from "@/lib/supabase";
-import { Product, products as fallbackCatalog } from "@/data/products";
+import { Product } from "@/data/products";
 import { getStoreProductsCatalog, invalidateProductCache } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const missingEnvironmentVariables = [
-    !process.env.NEXT_PUBLIC_SUPABASE_URL && "NEXT_PUBLIC_SUPABASE_URL",
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    !supabaseConfig.url && "SUPABASE_URL",
+    !supabaseConfig.anonKey && "SUPABASE_ANON_KEY",
   ].filter(Boolean);
 
   if (missingEnvironmentVariables.length > 0) {
@@ -33,6 +34,14 @@ export async function GET() {
   try {
     const finalProducts = await getStoreProductsCatalog();
 
+    if (finalProducts.length === 0) {
+      console.error("GET store-products data error: Supabase returned zero products");
+      return NextResponse.json(
+        { error: "Supabase returned no products. Check the production database and RLS policy." },
+        { status: 502, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     return NextResponse.json(finalProducts, {
       headers: {
         "Cache-Control": "no-store",
@@ -40,11 +49,11 @@ export async function GET() {
     });
   } catch (error) {
     console.error("GET store-products error:", error);
-    return NextResponse.json(fallbackCatalog, {
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    });
+    const message = error instanceof Error ? error.message : "Supabase product query failed";
+    return NextResponse.json(
+      { error: `Unable to load products: ${message}` },
+      { status: 502, headers: { "Cache-Control": "no-store" } }
+    );
   }
 }
 
