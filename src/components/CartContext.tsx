@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useMemo } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { products, Product } from "@/data/products";
 
@@ -39,11 +39,39 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | null>(null);
+const CART_STORAGE_KEY = "magnum_cart_items";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
+  const [hasHydratedCart, setHasHydratedCart] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedItems = localStorage.getItem(CART_STORAGE_KEY);
+      if (storedItems) {
+        const parsedItems = JSON.parse(storedItems);
+        if (Array.isArray(parsedItems)) {
+          setItems(parsedItems);
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to restore cart:", error);
+    } finally {
+      setHasHydratedCart(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedCart) return;
+
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch (error) {
+      console.warn("Failed to persist cart:", error);
+    }
+  }, [hasHydratedCart, items]);
 
   const addToCart = (product?: Partial<Product> | null, quantityToAdd: number = 1) => {
     // Default fallback to first product if no product passed
