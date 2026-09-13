@@ -14,6 +14,22 @@ import { getStoreProductsCatalog, invalidateProductCache } from "@/lib/products"
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const missingEnvironmentVariables = [
+    !process.env.NEXT_PUBLIC_SUPABASE_URL && "NEXT_PUBLIC_SUPABASE_URL",
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  ].filter(Boolean);
+
+  if (missingEnvironmentVariables.length > 0) {
+    console.error(
+      "GET store-products configuration error: missing Vercel environment variables",
+      missingEnvironmentVariables
+    );
+    return NextResponse.json(
+      { error: "Product catalog is not configured on the server." },
+      { status: 503, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   try {
     const finalProducts = await getStoreProductsCatalog();
 
