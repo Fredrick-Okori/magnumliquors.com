@@ -38,7 +38,7 @@ export default function TeamPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [filter, setFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -250,7 +250,7 @@ export default function TeamPage() {
           </div>
           <p className="text-xs text-neutral-600">Full system control, financial oversight, developer settings, user management.</p>
           <p className="text-xs font-bold text-purple-900 pt-1">
-            {members.filter((m) => m.role === "Superadmin").length} Active Superadmins
+            {isLoading ? "—" : members.filter((m) => m.role === "Superadmin").length} Active Superadmins
           </p>
         </div>
 
@@ -260,7 +260,7 @@ export default function TeamPage() {
           </div>
           <p className="text-xs text-neutral-600">Store operations, inventory & catalog management, stock adjustments, expenses.</p>
           <p className="text-xs font-bold text-[#854d0e] pt-1">
-            {members.filter((m) => m.role === "Manager").length} Active Managers
+            {isLoading ? "—" : members.filter((m) => m.role === "Manager").length} Active Managers
           </p>
         </div>
 
@@ -270,7 +270,7 @@ export default function TeamPage() {
           </div>
           <p className="text-xs text-neutral-600">Point of sale, customer order processing, cash handling, and order dispatching.</p>
           <p className="text-xs font-bold text-blue-900 pt-1">
-            {members.filter((m) => m.role === "Sales").length} Active Sales Staff
+            {isLoading ? "—" : members.filter((m) => m.role === "Sales").length} Active Sales Staff
           </p>
         </div>
       </div>
@@ -278,7 +278,7 @@ export default function TeamPage() {
       {/* Filter Tabs */}
       <div className="flex flex-wrap items-center gap-2">
         {[
-          { id: "all", label: `All Staff (${members.length})` },
+          { id: "all", label: `All Staff (${isLoading ? "—" : members.length})` },
           { id: "superadmin", label: "Superadmins" },
           { id: "manager", label: "Managers" },
           { id: "sales", label: "Sales Team" },

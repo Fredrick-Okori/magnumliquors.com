@@ -68,17 +68,21 @@ export default function DashboardOverviewPage() {
   const [toDate, setToDate] = useState("");
   const [quickDateFilter, setQuickDateFilter] = useState<"all" | "today" | "this_month" | "last_month">("all");
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<Order | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [prodRes, teamRes] = await Promise.all([
+      const [prodRes, teamRes, orderRes] = await Promise.all([
         fetch("/api/store-products"),
         fetch("/api/team/users"),
+        fetch("/api/orders"),
       ]);
-      const prodData = await prodRes.json();
-      const teamData = await teamRes.json();
+      const [prodData, teamData, orderData] = await Promise.all([
+        prodRes.json().catch(() => []),
+        teamRes.json().catch(() => []),
+        orderRes.json().catch(() => ({ docs: [] })),
+      ]);
 
       if (Array.isArray(prodData) && prodData.length > 0) {
         setProductsList(prodData);
@@ -88,8 +92,6 @@ export default function DashboardOverviewPage() {
       }
 
       let fetchedOrders: Order[] = [];
-      const orderRes = await fetch("/api/orders");
-      const orderData = await orderRes.json();
       if (orderData?.docs && Array.isArray(orderData.docs) && orderData.docs.length > 0) {
         fetchedOrders = orderData.docs.map((doc: any) => ({
           id: String(doc.id),
@@ -363,11 +365,15 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
             <TrendingUp size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="block text-[11px] font-semibold text-[#71717a]">Gross Stock</span>
-            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-              {finances.grossStockUGX.toLocaleString()}
-            </p>
+            {isLoading ? (
+              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                {finances.grossStockUGX.toLocaleString()}
+              </p>
+            )}
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
           </div>
         </div>
@@ -377,11 +383,15 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
             <CreditCard size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-[#71717a] block">Total Received</span>
-            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-              {finances.totalReceivedUGX.toLocaleString()}
-            </p>
+            {isLoading ? (
+              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                {finances.totalReceivedUGX.toLocaleString()}
+              </p>
+            )}
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
           </div>
         </div>
@@ -391,9 +401,13 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#475569] text-white flex items-center justify-center shadow-xs">
             <PackageCheck size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-[#71717a] block">Total Orders</span>
-            <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.orderCount}</p>
+            {isLoading ? (
+              <div className="h-7 w-12 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.orderCount}</p>
+            )}
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Non-cancelled</span>
           </div>
         </div>
@@ -403,9 +417,13 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
             <ShieldCheck size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-emerald-700 block">Orders Completed</span>
-            <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.completedOrderCount}</p>
+            {isLoading ? (
+              <div className="h-7 w-12 rounded-md bg-emerald-200/80 animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.completedOrderCount}</p>
+            )}
             <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Delivered</span>
           </div>
         </div>
@@ -415,9 +433,13 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
             <TrendingUp size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-[#71717a] block">Completed Gross Profit</span>
-            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.totalGrossProfitUGX.toLocaleString()}</p>
+            {isLoading ? (
+              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.totalGrossProfitUGX.toLocaleString()}</p>
+            )}
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">UGX</span>
           </div>
         </div>
@@ -432,14 +454,18 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
             <Code2 size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="text-[11px] font-bold text-[#b8860b] block">Dev Fee (25% Profit)</span>
-            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-              {finances.developerCommissionUGX.toLocaleString()}
-            </p>
+            {isLoading ? (
+              <div className="h-7 w-28 rounded-md bg-[#ebdcb2] animate-pulse my-1" />
+            ) : (
+              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                {finances.developerCommissionUGX.toLocaleString()}
+              </p>
+            )}
             <div className="flex items-center gap-1 text-[10px] text-[#71717a] font-sans">
               <span className="font-bold uppercase tracking-wider text-[#b8860b]">UGX</span>
-              <span>• ≈ ${finances.developerCommissionUSD.toLocaleString()} USD</span>
+              {!isLoading && <span>• ≈ ${finances.developerCommissionUSD.toLocaleString()} USD</span>}
             </div>
           </div>
         </div>
@@ -449,11 +475,15 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
             <Coins size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-[#71717a] block">Store Profit (75%)</span>
-            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-              {finances.storeNetPayoutUGX.toLocaleString()}
-            </p>
+            {isLoading ? (
+              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                {finances.storeNetPayoutUGX.toLocaleString()}
+              </p>
+            )}
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
           </div>
         </div>
@@ -463,11 +493,15 @@ export default function DashboardOverviewPage() {
           <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-xs">
             <FileText size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-[#71717a] block">Invoices (Pending)</span>
-            <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-              {finances.invoicesUGX.toLocaleString()}
-            </p>
+            {isLoading ? (
+              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                {finances.invoicesUGX.toLocaleString()}
+              </p>
+            )}
             <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
           </div>
         </div>
@@ -501,34 +535,66 @@ export default function DashboardOverviewPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
           <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
             <p className="text-[11px] font-bold text-[#71717a] uppercase tracking-wider">Gross Platform Volume</p>
-            <p className="font-sans text-xl font-extrabold text-[#18181b]">
-              UGX {finances.totalSalesUGX.toLocaleString()}
-            </p>
-            <p className="text-[10px] text-[#71717a]">Selling-price value of {productsList.reduce((sum, product) => sum + (product.stockQuantity ?? 0), 0).toLocaleString()} bottles in stock</p>
+            {isLoading ? (
+              <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-xl font-extrabold text-[#18181b]">
+                UGX {finances.totalSalesUGX.toLocaleString()}
+              </p>
+            )}
+            {isLoading ? (
+              <div className="h-3 w-36 bg-[#e4e4e7] rounded animate-pulse my-1" />
+            ) : (
+              <p className="text-[10px] text-[#71717a]">
+                Selling-price value of {productsList.reduce((sum, product) => sum + (product.stockQuantity ?? 0), 0).toLocaleString()} bottles in stock
+              </p>
+            )}
           </div>
 
           <div className="rounded-2xl bg-[#fffcf0] p-4 border border-[#f3e5b8] space-y-1 shadow-2xs">
             <p className="text-[11px] font-bold text-[#b8860b] uppercase tracking-wider">Developer 25% Profit Share</p>
-            <p className="font-sans text-xl font-extrabold text-[#b8860b]">
-              UGX {finances.developerCommissionUGX.toLocaleString()}
-            </p>
+            {isLoading ? (
+              <div className="h-6 w-32 rounded-md bg-[#ebdcb2] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-xl font-extrabold text-[#b8860b]">
+                UGX {finances.developerCommissionUGX.toLocaleString()}
+              </p>
+            )}
             <p className="text-[10px] text-[#854d0e] font-semibold">Total payout due to developer</p>
-            <p className="text-[10px] text-[#71717a]">Base: UGX {finances.totalGrossProfitUGX.toLocaleString()} completed gross profit</p>
+            {isLoading ? (
+              <div className="h-3 w-40 bg-[#f3e5b8] rounded animate-pulse my-1" />
+            ) : (
+              <p className="text-[10px] text-[#71717a]">
+                Base: UGX {finances.totalGrossProfitUGX.toLocaleString()} completed gross profit
+              </p>
+            )}
           </div>
 
           <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
             <p className="text-[11px] font-bold text-[#16a34a] uppercase tracking-wider">Collected / Cleared Share</p>
-            <p className="font-sans text-xl font-extrabold text-[#16a34a]">
-              UGX {finances.developerPaidCommissionUGX.toLocaleString()}
-            </p>
-            <p className="text-[10px] text-[#71717a]">Based on {finances.completedOrderCount} completed orders</p>
+            {isLoading ? (
+              <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-xl font-extrabold text-[#16a34a]">
+                UGX {finances.developerPaidCommissionUGX.toLocaleString()}
+              </p>
+            )}
+            {isLoading ? (
+              <div className="h-3 w-32 bg-[#e4e4e7] rounded animate-pulse my-1" />
+            ) : (
+              <p className="text-[10px] text-[#71717a]">Based on {finances.completedOrderCount} completed orders</p>
+            )}
           </div>
 
           <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
             <p className="text-[11px] font-bold text-[#18181b] uppercase tracking-wider">Store Profit Retained (75%)</p>
-            <p className="font-sans text-xl font-extrabold text-[#18181b]">
-              UGX {finances.storeNetPayoutUGX.toLocaleString()}
-            </p>
+            {isLoading ? (
+              <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-xl font-extrabold text-[#18181b]">
+                UGX {finances.storeNetPayoutUGX.toLocaleString()}
+              </p>
+            )}
             <p className="text-[10px] text-[#71717a]">Remaining completed gross profit after developer share</p>
           </div>
         </div>
@@ -543,7 +609,7 @@ export default function DashboardOverviewPage() {
             </span>
           </div>
           <div className="font-sans font-bold text-[#18181b] text-xs">
-            Pending Collection: <span className="text-[#d97706]">UGX {finances.developerPendingCommissionUGX.toLocaleString()}</span>
+            Pending Collection: <span className="text-[#d97706]">{isLoading ? "—" : `UGX ${finances.developerPendingCommissionUGX.toLocaleString()}`}</span>
           </div>
         </div>
       </div>
@@ -563,11 +629,15 @@ export default function DashboardOverviewPage() {
               alt="Airtel Money"
               className="h-14 w-16 shrink-0 object-contain"
             />
-            <div>
+            <div className="min-w-0 flex-1">
               <span className="text-[11px] font-semibold text-[#71717a] block">Airtel Account</span>
-              <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-                {finances.airtelUGX.toLocaleString()}
-              </p>
+              {isLoading ? (
+                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+                  {finances.airtelUGX.toLocaleString()}
+                </p>
+              )}
               <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
             </div>
           </div>
@@ -579,11 +649,15 @@ export default function DashboardOverviewPage() {
               alt="MTN Mobile Money"
               className="h-14 w-16 shrink-0 object-contain"
             />
-            <div>
+            <div className="min-w-0 flex-1">
               <span className="text-[11px] font-semibold text-[#71717a] block">MTN Account</span>
-              <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-                {finances.mtnUGX.toLocaleString()}
-              </p>
+              {isLoading ? (
+                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+                  {finances.mtnUGX.toLocaleString()}
+                </p>
+              )}
               <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
             </div>
           </div>
@@ -595,11 +669,15 @@ export default function DashboardOverviewPage() {
               alt="Visa Card"
               className="h-14 w-16 shrink-0 object-contain"
             />
-            <div>
+            <div className="min-w-0 flex-1">
               <span className="text-[11px] font-semibold text-[#71717a] block">Visa Card Account</span>
-              <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-                {finances.cardUGX.toLocaleString()}
-              </p>
+              {isLoading ? (
+                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+                  {finances.cardUGX.toLocaleString()}
+                </p>
+              )}
               <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
             </div>
           </div>
@@ -611,11 +689,15 @@ export default function DashboardOverviewPage() {
               alt="Cash"
               className="h-14 w-16 shrink-0 object-cover rounded-xl"
             />
-            <div>
+            <div className="min-w-0 flex-1">
               <span className="text-[11px] font-semibold text-[#71717a] block">Cash</span>
-              <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-                {finances.cashPaymentUGX.toLocaleString()}
-              </p>
+              {isLoading ? (
+                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+                  {finances.cashPaymentUGX.toLocaleString()}
+                </p>
+              )}
               <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
             </div>
           </div>
@@ -637,38 +719,52 @@ export default function DashboardOverviewPage() {
               href="/dashboard/orders"
               className="text-xs font-bold text-[#b8860b] hover:underline flex items-center gap-1"
             >
-              View All ({filteredOrders.length}) <ArrowRight size={13} />
+              View All ({isLoading ? "—" : filteredOrders.length}) <ArrowRight size={13} />
             </Link>
           </div>
 
           <div className="divide-y divide-[#f4f4f3]">
-            {filteredOrders.slice(0, 4).map((order) => (
-              <div key={order.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-[#18181b]">{order.orderNumber}</span>
-                    <span className="text-[10px] text-[#71717a]">· {order.createdAt}</span>
+            {isLoading ? (
+              <div className="space-y-3 py-1">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center justify-between py-2 animate-pulse">
+                    <div className="space-y-1.5">
+                      <div className="h-3.5 w-28 bg-[#e4e4e7] rounded" />
+                      <div className="h-3 w-36 bg-[#f4f4f3] rounded" />
+                    </div>
+                    <div className="h-6 w-16 bg-[#e4e4e7] rounded-full" />
                   </div>
-                  <p className="text-xs font-semibold text-[#18181b]">{order.customerName}</p>
-                  <p className="text-[11px] text-[#71717a] truncate max-w-[220px]">{order.deliveryAddress}</p>
-                </div>
-
-                <div className="text-right space-y-1">
-                  <span className="font-sans text-xs font-bold text-[#b8860b] block">
-                    {formatAmount(order.totalAmountUSD)}
-                  </span>
-                  <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                    order.orderStatus === "Delivered"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : order.orderStatus === "Out for Delivery"
-                      ? "bg-amber-100 text-amber-800"
-                      : "bg-[#fffcf0] text-[#b8860b] border border-[#f3e5b8]"
-                  }`}>
-                    {order.orderStatus}
-                  </span>
-                </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              filteredOrders.slice(0, 4).map((order) => (
+                <div key={order.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-[#18181b]">{order.orderNumber}</span>
+                      <span className="text-[10px] text-[#71717a]">· {order.createdAt}</span>
+                    </div>
+                    <p className="text-xs font-semibold text-[#18181b]">{order.customerName}</p>
+                    <p className="text-[11px] text-[#71717a] truncate max-w-[220px]">{order.deliveryAddress}</p>
+                  </div>
+
+                  <div className="text-right space-y-1">
+                    <span className="font-sans text-xs font-bold text-[#b8860b] block">
+                      {formatAmount(order.totalAmountUSD)}
+                    </span>
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                      order.orderStatus === "Delivered"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : order.orderStatus === "Out for Delivery"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-[#fffcf0] text-[#b8860b] border border-[#f3e5b8]"
+                    }`}>
+                      {order.orderStatus}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -688,42 +784,59 @@ export default function DashboardOverviewPage() {
           </div>
 
           <div className="divide-y divide-[#f4f4f3]">
-            {productsList.slice(0, 4).map((p) => {
-              const stock = p.stockQuantity ?? 50;
-              return (
-                <div key={p.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#f7f7f6] p-1 border border-[#e5e5e4] flex items-center justify-center">
-                      {isVideoMedia(p.image) ? (
-                        <FastVideo
-                          src={p.image}
-                          autoPlay
-                          loop
-                          muted
-                          objectFit="contain"
-                          className="h-full w-full rounded-lg"
-                        />
-                      ) : (
-                        <img src={p.image} alt={p.name} className="h-full w-full object-contain" />
-                      )}
+            {isLoading ? (
+              <div className="space-y-3 py-1">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center justify-between py-2 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 bg-[#e4e4e7] rounded-xl" />
+                      <div className="space-y-1.5">
+                        <div className="h-3.5 w-24 bg-[#e4e4e7] rounded" />
+                        <div className="h-3 w-16 bg-[#f4f4f3] rounded" />
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-serif text-xs font-bold text-[#18181b] line-clamp-1">{p.name}</p>
-                      <p className="text-[10px] text-[#71717a]">{p.producer} • {p.category}</p>
-                    </div>
+                    <div className="h-4 w-12 bg-[#e4e4e7] rounded" />
                   </div>
+                ))}
+              </div>
+            ) : (
+              productsList.slice(0, 4).map((p) => {
+                const stock = p.stockQuantity ?? 50;
+                return (
+                  <div key={p.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#f7f7f6] p-1 border border-[#e5e5e4] flex items-center justify-center">
+                        {isVideoMedia(p.image) ? (
+                          <FastVideo
+                            src={p.image}
+                            autoPlay
+                            loop
+                            muted
+                            objectFit="contain"
+                            className="h-full w-full rounded-lg"
+                          />
+                        ) : (
+                          <img src={p.image} alt={p.name} className="h-full w-full object-contain" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-serif text-xs font-bold text-[#18181b] line-clamp-1">{p.name}</p>
+                        <p className="text-[10px] text-[#71717a]">{p.producer} • {p.category}</p>
+                      </div>
+                    </div>
 
-                  <div className="text-right">
-                    <span className="font-sans text-xs font-bold text-[#b8860b] block">
-                      {formatAmount(p.numericPrice)}
-                    </span>
-                    <span className="text-[10px] font-semibold text-[#71717a]">
-                      {stock} in stock
-                    </span>
+                    <div className="text-right">
+                      <span className="font-sans text-xs font-bold text-[#b8860b] block">
+                        {formatAmount(p.numericPrice)}
+                      </span>
+                      <span className="text-[10px] font-semibold text-[#71717a]">
+                        {stock} in stock
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 

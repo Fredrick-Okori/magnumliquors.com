@@ -41,9 +41,11 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadOrders = async () => {
+      setIsLoading(true);
       let apiOrders: Order[] = [];
       try {
         const res = await fetch("/api/orders");
@@ -68,6 +70,7 @@ export default function OrdersPage() {
       ];
 
       setOrders(combined);
+      setIsLoading(false);
     };
 
     loadOrders();
@@ -132,7 +135,7 @@ export default function OrdersPage() {
               : "bg-white text-[#71717a] border border-[#e5e5e4] hover:border-[#18181b]"
           }`}
         >
-          All Orders ({orders.length})
+          All Orders ({isLoading ? "—" : orders.length})
         </button>
         <button
           onClick={() => setStatusFilter("active")}
@@ -142,7 +145,7 @@ export default function OrdersPage() {
               : "bg-white text-[#71717a] border border-[#e5e5e4] hover:border-[#18181b]"
           }`}
         >
-          Active Deliveries ({orders.filter((o) => o.orderStatus !== "Delivered").length})
+          Active Deliveries ({isLoading ? "—" : orders.filter((o) => o.orderStatus !== "Delivered").length})
         </button>
         <button
           onClick={() => setStatusFilter("completed")}
@@ -152,79 +155,95 @@ export default function OrdersPage() {
               : "bg-white text-[#71717a] border border-[#e5e5e4] hover:border-[#18181b]"
           }`}
         >
-          Completed ({orders.filter((o) => o.orderStatus === "Delivered").length})
+          Completed ({isLoading ? "—" : orders.filter((o) => o.orderStatus === "Delivered").length})
         </button>
       </div>
 
       {/* Orders List Card */}
       <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-4">
         <div className="divide-y divide-[#f4f4f3]">
-          {filteredOrders.map((order) => (
-            <div key={order.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              {(() => {
-                const grossProfitUGX = (order.items || []).reduce((sum, item) => sum + (item.grossProfitUGX || 0), 0);
-                const developerProfitShareUGX = Math.round(grossProfitUGX * 0.25);
-                return (
-                  <>
-              
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <span className="font-sans text-xs font-extrabold text-[#18181b] bg-[#f4f4f3] px-2 py-0.5 rounded border border-[#e4e4e7]">
-                    {order.orderNumber}
-                  </span>
-                  <span className="rounded-full bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 text-[10px] font-bold text-[#b8860b]">
-                    {order.paymentMethod}
-                  </span>
-                  <span className="text-[10px] text-[#71717a] font-sans">{order.createdAt}</span>
+          {isLoading ? (
+            <div className="space-y-4 py-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center justify-between py-3 animate-pulse">
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 bg-[#e4e4e7] rounded" />
+                    <div className="h-3.5 w-48 bg-[#f4f4f3] rounded" />
+                    <div className="h-3 w-64 bg-[#f4f4f3] rounded" />
+                  </div>
+                  <div className="h-8 w-24 bg-[#e4e4e7] rounded-full" />
                 </div>
-
-                <p className="text-xs font-semibold text-[#18181b]">{order.customerName} ({order.customerPhone})</p>
-                <p className="text-[11px] text-[#71717a]">{order.deliveryAddress}</p>
-
-                <div className="pt-1 flex flex-wrap items-center gap-4 text-xs font-bold font-sans">
-                  <span className="font-sans text-sm font-extrabold text-[#b8860b] tracking-tight">
-                    Total: {formatAmount(order.totalAmountUSD)}
-                  </span>
-                  <span className="text-[#b8860b] text-[10px] font-sans font-bold bg-[#fffcf0] border border-[#f3e5b8] px-2 py-0.5 rounded-full">
-                    25% Profit Share: UGX {developerProfitShareUGX.toLocaleString()}
-                  </span>
-                  <span className="text-[#16a34a] text-[10px] font-sans font-bold bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                    Gross Profit: UGX {grossProfitUGX.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedInvoiceOrder(order)}
-                  className="rounded-full border border-[#e5e5e4] bg-white px-3.5 py-1.5 text-xs font-bold text-[#18181b] hover:bg-[#f4f4f3] transition flex items-center gap-1.5 shadow-2xs"
-                >
-                  <FileText size={13} className="text-[#b8860b]" /> Invoice
-                </button>
-
-                <select
-                  value={order.orderStatus}
-                  onChange={(e) => handleUpdateStatus(order.id, e.target.value as any)}
-                  className={`rounded-full px-3 py-1 text-xs font-bold border outline-none cursor-pointer ${
-                    order.orderStatus === "Pending"
-                      ? "bg-red-100 text-red-700 border-red-200"
-                      : order.orderStatus === "Out for Delivery"
-                      ? "bg-amber-100 text-amber-700 border-amber-200"
-                      : "bg-[#fffcf0] text-[#b8860b] border-[#f3e5b8]"
-                  }`}
-                >
-                  <option value="Pending">High (Pending)</option>
-                  <option value="Processing">Medium (Processing)</option>
-                  <option value="Out for Delivery">Out for Delivery</option>
-                  <option value="Delivered">Low (Completed)</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-                  </>
-                );
-              })()}
+              ))}
             </div>
-          ))}
+          ) : filteredOrders.length === 0 ? (
+            <div className="py-12 text-center text-xs text-[#71717a]">No customer orders match the selected filter.</div>
+          ) : (
+            filteredOrders.map((order) => (
+              <div key={order.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {(() => {
+                  const grossProfitUGX = (order.items || []).reduce((sum, item) => sum + (item.grossProfitUGX || 0), 0);
+                  const developerProfitShareUGX = Math.round(grossProfitUGX * 0.25);
+                  return (
+                    <>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                          <span className="font-sans text-xs font-extrabold text-[#18181b] bg-[#f4f4f3] px-2 py-0.5 rounded border border-[#e4e4e7]">
+                            {order.orderNumber}
+                          </span>
+                          <span className="rounded-full bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 text-[10px] font-bold text-[#b8860b]">
+                            {order.paymentMethod}
+                          </span>
+                          <span className="text-[10px] text-[#71717a] font-sans">{order.createdAt}</span>
+                        </div>
+
+                        <p className="text-xs font-semibold text-[#18181b]">{order.customerName} ({order.customerPhone})</p>
+                        <p className="text-[11px] text-[#71717a]">{order.deliveryAddress}</p>
+
+                        <div className="pt-1 flex flex-wrap items-center gap-4 text-xs font-bold font-sans">
+                          <span className="font-sans text-sm font-extrabold text-[#b8860b] tracking-tight">
+                            Total: {formatAmount(order.totalAmountUSD)}
+                          </span>
+                          <span className="text-[#b8860b] text-[10px] font-sans font-bold bg-[#fffcf0] border border-[#f3e5b8] px-2 py-0.5 rounded-full">
+                            25% Profit Share: UGX {developerProfitShareUGX.toLocaleString()}
+                          </span>
+                          <span className="text-[#16a34a] text-[10px] font-sans font-bold bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                            Gross Profit: UGX {grossProfitUGX.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setSelectedInvoiceOrder(order)}
+                          className="rounded-full border border-[#e5e5e4] bg-white px-3.5 py-1.5 text-xs font-bold text-[#18181b] hover:bg-[#f4f4f3] transition flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <FileText size={13} className="text-[#b8860b]" /> Invoice
+                        </button>
+
+                        <select
+                          value={order.orderStatus}
+                          onChange={(e) => handleUpdateStatus(order.id, e.target.value as any)}
+                          className={`rounded-full px-3 py-1 text-xs font-bold border outline-none cursor-pointer ${
+                            order.orderStatus === "Pending"
+                              ? "bg-red-100 text-red-700 border-red-200"
+                              : order.orderStatus === "Out for Delivery"
+                              ? "bg-amber-100 text-amber-700 border-amber-200"
+                              : "bg-[#fffcf0] text-[#b8860b] border-[#f3e5b8]"
+                          }`}
+                        >
+                          <option value="Pending">High (Pending)</option>
+                          <option value="Processing">Medium (Processing)</option>
+                          <option value="Out for Delivery">Out for Delivery</option>
+                          <option value="Delivered">Low (Completed)</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            ))
+          )}
         </div>
       </div>
 

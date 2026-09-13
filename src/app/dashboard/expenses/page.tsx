@@ -42,60 +42,7 @@ interface ExpenseItem {
   notes?: string;
 }
 
-const initialExpenses: ExpenseItem[] = [
-  {
-    id: "EXP-101",
-    title: "Cellar Climate Humidity & Temperature Unit Servicing",
-    category: "Operations & Maintenance",
-    amountUGX: 1850000,
-    amountUSD: 500.0,
-    recordedBy: "Isaac Kato (Cellar Master)",
-    paymentMethod: "Visa Card",
-    voucherNumber: "VCH-8821",
-    date: "2026-08-28",
-    status: "Approved",
-    notes: "Quarterly precision HVAC calibration for rare vintage wine storage.",
-  },
-  {
-    id: "EXP-102",
-    title: "Express Bottle Delivery Fuel & Rider Allowances",
-    category: "Logistics & Delivery",
-    amountUGX: 620000,
-    amountUSD: 167.56,
-    recordedBy: "Jessin Sam (Store Manager)",
-    paymentMethod: "MTN Mobile Money",
-    voucherNumber: "VCH-8822",
-    date: "2026-08-29",
-    status: "Approved",
-    notes: "Kololo, Naguru, and Entebbe VIP order dispatches.",
-  },
-  {
-    id: "EXP-103",
-    title: "Custom Gold-Embossed Velvet Bottle Gift Boxes & Ribbon",
-    category: "Packaging & Boxes",
-    amountUGX: 1450000,
-    amountUSD: 391.89,
-    recordedBy: "Brenda Namuli (Inventory)",
-    paymentMethod: "Airtel Money",
-    voucherNumber: "VCH-8823",
-    date: "2026-08-30",
-    status: "Approved",
-    notes: "500 luxury presentation gift boxes restocked.",
-  },
-  {
-    id: "EXP-104",
-    title: "High-Speed Fibre Internet & POS System Backup",
-    category: "Utilities & Internet",
-    amountUGX: 380000,
-    amountUSD: 102.7,
-    recordedBy: "Jessin Sam (Store Manager)",
-    paymentMethod: "Visa Card",
-    voucherNumber: "VCH-8824",
-    date: "2026-08-31",
-    status: "Pending",
-    notes: "Monthly store optical fibre connectivity.",
-  },
-];
+const initialExpenses: ExpenseItem[] = [];
 
 const CATEGORIES = [
   "All Categories",
@@ -114,6 +61,7 @@ export default function ExpensesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Form State
   const [title, setTitle] = useState("");
@@ -126,11 +74,13 @@ export default function ExpensesPage() {
 
   // Load from API and Supabase
   const loadExpenses = async () => {
+    setIsLoading(true);
     try {
       const res = await fetch("/api/expenses");
       const data = await res.json();
       if (data?.docs && Array.isArray(data.docs) && data.docs.length > 0) {
         setExpenses(data.docs);
+        setIsLoading(false);
         return;
       }
     } catch (err) {
@@ -146,6 +96,7 @@ export default function ExpensesPage() {
         }
       } catch (e) {}
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -286,19 +237,27 @@ export default function ExpensesPage() {
         
         <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
           <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Total Expenses (UGX)</p>
-          <p className="font-sans text-3xl font-extrabold tracking-tight text-[#18181b]">
-            UGX {stats.totalUGX.toLocaleString()}
-          </p>
+          {isLoading ? (
+            <div className="h-9 w-44 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+          ) : (
+            <p className="font-sans text-3xl font-extrabold tracking-tight text-[#18181b]">
+              UGX {stats.totalUGX.toLocaleString()}
+            </p>
+          )}
           <span className="inline-flex items-center gap-1 text-xs font-bold text-[#b8860b] bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 rounded-full">
-            <TrendingDown size={14} /> {stats.count} recorded vouchers
+            <TrendingDown size={14} /> {isLoading ? "—" : `${stats.count} recorded vouchers`}
           </span>
         </div>
 
         <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
           <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Approved Disbursements</p>
-          <p className="font-sans text-3xl font-extrabold tracking-tight text-emerald-800">
-            UGX {stats.approvedUGX.toLocaleString()}
-          </p>
+          {isLoading ? (
+            <div className="h-9 w-44 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+          ) : (
+            <p className="font-sans text-3xl font-extrabold tracking-tight text-emerald-800">
+              UGX {stats.approvedUGX.toLocaleString()}
+            </p>
+          )}
           <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full">
             <CheckCircle2 size={14} /> Reconciled & Audited
           </span>
@@ -306,9 +265,13 @@ export default function ExpensesPage() {
 
         <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
           <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Pending Approval</p>
-          <p className="font-sans text-3xl font-extrabold tracking-tight text-amber-800">
-            UGX {stats.pendingUGX.toLocaleString()}
-          </p>
+          {isLoading ? (
+            <div className="h-9 w-44 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+          ) : (
+            <p className="font-sans text-3xl font-extrabold tracking-tight text-amber-800">
+              UGX {stats.pendingUGX.toLocaleString()}
+            </p>
+          )}
           <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full">
             <Clock size={14} /> Manager Review Required
           </span>

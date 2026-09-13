@@ -1,15 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-if (process.env.NODE_ENV === "production" && (!supabaseUrl || !supabaseAnonKey)) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in production.");
+if (!supabaseUrl || !supabaseAnonKey) {
+  if (process.env.NODE_ENV === "production") {
+    console.warn("Notice: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured. Falling back to offline fallback catalog.");
+  }
 }
 
 export const supabase = createClient(
-  supabaseUrl || "http://127.0.0.1:54321",
-  supabaseAnonKey || "development-only-key"
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseAnonKey || "placeholder-anon-key"
 );
 
 export interface SupabaseOrder {

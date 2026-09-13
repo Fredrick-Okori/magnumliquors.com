@@ -1,42 +1,21 @@
 import { NextResponse } from "next/server";
 import { saveOrderToSupabase, supabase } from "@/lib/supabase";
+import { getOrdersCatalog, invalidateOrdersCache } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const { data: supabaseOrders, error } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const orders = await getOrdersCatalog();
 
-    if (error) {
-      console.warn("Supabase orders query error:", error.message);
-      return NextResponse.json({ docs: [] });
-    }
-
-    const mappedOrders = (supabaseOrders || []).map((so: any) => ({
-      id: String(so.id),
-      orderNumber: so.order_number || `MAG-${so.id}`,
-      customerName: so.customer_name || "Valued Customer",
-      customerEmail: so.customer_email || "N/A",
-      customerPhone: so.customer_phone || "N/A",
-      deliveryAddress: so.delivery_address || "Kampala, Uganda",
-      orderStatus: so.order_status || "Pending",
-      paymentMethod: so.payment_method || "Cash on Delivery",
-      paymentStatus: so.payment_status || "Pending",
-      totalAmountUSD: Number(so.total_amount_usd || 0),
-      totalAmountUGX: Number(so.total_amount_ugx || 0),
-      commissionRate: Number(so.commission_rate || 0.15),
-      systemCommissionUSD: Number(so.system_commission_usd || 0),
-      systemCommissionUGX: Number(so.system_commission_ugx || 0),
-      netPayoutUSD: Number(so.net_payout_usd || 0),
-      netPayoutUGX: Number(so.net_payout_ugx || 0),
-      items: so.items || [],
-      createdAt: so.created_at || new Date().toISOString(),
-    }));
-
-    return NextResponse.json({ docs: mappedOrders });
+    return NextResponse.json(
+      { docs: orders },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=15, s-maxage=15, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch (error) {
     console.error("GET orders Supabase error:", error);
     return NextResponse.json({ docs: [] }, { status: 500 });
@@ -87,6 +66,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: saved.error }, { status: 503 });
     }
 
+    invalidateOrdersCache();
     return NextResponse.json({ success: true, order: saved.data });
   } catch (error: any) {
     console.error("Order POST creation error:", error);
@@ -125,6 +105,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    invalidateOrdersCache();
     return NextResponse.json({ success: true, order: data?.[0] });
   } catch (error) {
     console.error("PATCH order Supabase error:", error);
@@ -145,6 +126,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    invalidateOrdersCache();
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE order error:", error);

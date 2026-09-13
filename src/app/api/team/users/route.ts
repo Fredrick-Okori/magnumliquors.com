@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
+import {
+  TeamMember,
+  TeamRole,
+  normalizeRole,
+  getTeamMembersCatalog,
+  invalidateTeamCache,
+} from "@/lib/team";
 
 export const dynamic = "force-dynamic";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Create admin client if service role key is present
 const supabaseAdmin = serviceRoleKey && supabaseUrl
   ? createClient(supabaseUrl, serviceRoleKey, {
       auth: {
@@ -16,26 +22,6 @@ const supabaseAdmin = serviceRoleKey && supabaseUrl
       },
     })
   : null;
-
-export type TeamRole = "Superadmin" | "Manager" | "Sales";
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: TeamRole;
-  phone: string;
-  status: "Active On Shift" | "Active" | "Invited" | "Off Shift";
-  authId?: string;
-  createdAt?: string;
-}
-
-function normalizeRole(roleInput?: string): TeamRole {
-  const r = (roleInput || "").toLowerCase();
-  if (r.includes("super") || r.includes("admin")) return "Superadmin";
-  if (r.includes("manage") || r.includes("sommelier") || r.includes("inventory")) return "Manager";
-  return "Sales";
-}
 
 async function isSuperadminRequest(request: Request): Promise<boolean> {
   const authorization = request.headers.get("authorization");
@@ -50,62 +36,13 @@ async function isSuperadminRequest(request: Request): Promise<boolean> {
 
 export async function GET() {
   try {
-    const list: TeamMember[] = [];
+    const list = await getTeamMembersCatalog();
 
-    // 1. Try querying Supabase profiles table
-    try {
-      const { data: profiles, error: profErr } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (!profErr && profiles && profiles.length > 0) {
-        profiles.forEach((p: any) => {
-          const email = p.email || "staff@magnumliquors.com";
-          if (!list.some((existing) => existing.email.toLowerCase() === email.toLowerCase())) {
-            list.push({
-              id: p.id || `usr_${Date.now()}`,
-              authId: p.id,
-              name: p.full_name || email.split("@")[0],
-              role: normalizeRole(p.role),
-              email: email,
-              phone: p.phone || "+256 700 000000",
-              status: "Active",
-              createdAt: p.created_at,
-            });
-          }
-        });
-      }
-    } catch {}
-
-    // 2. If Supabase Admin is available, list users from Auth
-    if (supabaseAdmin) {
-      try {
-        const { data: usersData, error } = await supabaseAdmin.auth.admin.listUsers();
-        if (!error && usersData?.users) {
-          usersData.users.forEach((u) => {
-            const meta = u.user_metadata || {};
-            const email = u.email || "user@magnumliquors.com";
-            if (!list.some((existing) => existing.email.toLowerCase() === email.toLowerCase())) {
-              list.push({
-                id: u.id,
-                authId: u.id,
-                name: meta.full_name || meta.name || email.split("@")[0],
-                role: normalizeRole(meta.role),
-                email: email,
-                phone: meta.phone || "+256 700 000000",
-                status: u.email_confirmed_at ? "Active" : "Active",
-                createdAt: u.created_at,
-              });
-            }
-          });
-        }
-      } catch (err) {
-        console.warn("Supabase admin listUsers warning:", err);
-      }
-    }
-
-    return NextResponse.json(list);
+    return NextResponse.json(list, {
+      headers: {
+        "Cache-Control": "private, max-age=30, s-maxage=30, stale-while-revalidate=120",
+      },
+    });
   } catch (error) {
     console.error("GET /api/team/users error:", error);
     return NextResponse.json([]);
@@ -127,7 +64,6 @@ export async function POST(request: Request) {
 
     const assignedRole: TeamRole = normalizeRole(role);
     let authUserId = `usr_${Date.now()}`;
-    let isConfirmed = false;
 
     // 1. Try Admin API if Service Key exists
     if (supabaseAdmin) {
@@ -148,10 +84,9 @@ export async function POST(request: Request) {
 
       if (adminData?.user) {
         authUserId = adminData.user.id;
-        isConfirmed = true;
       }
     } else {
-      // 2. Standard Supabase Auth Signup (Creates user directly in Supabase Authentication Users collection)
+      // 2. Standard Supabase Auth Signup
       const { data: signData, error: signErr } = await supabase.auth.signUp({
         email,
         password,
@@ -170,7 +105,6 @@ export async function POST(request: Request) {
 
       if (signData?.user) {
         authUserId = signData.user.id;
-        isConfirmed = !!signData.user.email_confirmed_at;
       }
     }
 
@@ -184,6 +118,8 @@ export async function POST(request: Request) {
         phone: phone || "",
       });
     } catch {}
+
+    invalidateTeamCache();
 
     const newMember: TeamMember = {
       id: authUserId,
