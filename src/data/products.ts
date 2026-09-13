@@ -57,7 +57,9 @@ export function getProductById(id: string): Product | undefined {
 
 /**
  * Slug lookup against live database products:
- * Matches slugified name, compound name-origin, or numerical ID.
+ * 1. Exact match (name slug, full producer+name slug, compound origin slug, raw decoded name, or ID).
+ * 2. Prefix & containment matches across all slug combinations.
+ * 3. Token-set matching (all distinct words in the slug must exist in product attributes).
  */
 export function getProductBySlug(rawSlug: string, list: Product[]): Product | undefined {
   if (!rawSlug || !Array.isArray(list) || list.length === 0) return undefined;
@@ -70,22 +72,23 @@ export function getProductBySlug(rawSlug: string, list: Product[]): Product | un
   }
 
   const normalizedSlug = slugify(decoded);
+  if (!normalizedSlug) return undefined;
 
-  // 1. Exact match against common slug combinations
+  // Pass 1: Exact matches against all primary slug configurations
   for (const p of list) {
     if (!p) continue;
     const nameSlug = slugify(p.name || "");
+    const fullProducerNameSlug = slugify(`${p.producer || ""} ${p.name || ""}`);
     const fullNameOriginSlug = slugify(`${p.name || ""} ${p.origin || ""}`);
     const fullProducerNameOriginSlug = slugify(`${p.producer || ""} ${p.name || ""} ${p.origin || ""}`);
-    const fullProducerNameSlug = slugify(`${p.producer || ""} ${p.name || ""}`);
     const pId = String(p.id || "").trim().toLowerCase();
     const pName = (p.name || "").trim().toLowerCase();
 
     if (
       nameSlug === normalizedSlug ||
+      fullProducerNameSlug === normalizedSlug ||
       fullNameOriginSlug === normalizedSlug ||
       fullProducerNameOriginSlug === normalizedSlug ||
-      fullProducerNameSlug === normalizedSlug ||
       nameSlug === decoded ||
       pId === decoded ||
       pId === rawSlug ||
@@ -95,21 +98,49 @@ export function getProductBySlug(rawSlug: string, list: Product[]): Product | un
     }
   }
 
-  // 2. Prefix / containment match
+  // Pass 2: Prefix and containment matches across both directions
   for (const p of list) {
     if (!p) continue;
     const nameSlug = slugify(p.name || "");
-    if (nameSlug && nameSlug.length >= 3 && (normalizedSlug.startsWith(nameSlug) || normalizedSlug.includes(nameSlug))) {
-      return p;
+    const fullProducerNameSlug = slugify(`${p.producer || ""} ${p.name || ""}`);
+    const fullNameOriginSlug = slugify(`${p.name || ""} ${p.origin || ""}`);
+
+    const candidates = [nameSlug, fullProducerNameSlug, fullNameOriginSlug].filter(Boolean);
+
+    for (const c of candidates) {
+      if (
+        (c.length >= 3 && (normalizedSlug.startsWith(c) || normalizedSlug.includes(c))) ||
+        (normalizedSlug.length >= 3 && (c.startsWith(normalizedSlug) || c.includes(normalizedSlug)))
+      ) {
+        return p;
+      }
     }
   }
 
-  // 3. Reverse prefix match
-  for (const p of list) {
-    if (!p) continue;
-    const nameSlug = slugify(p.name || "");
-    if (nameSlug && nameSlug.startsWith(normalizedSlug) && normalizedSlug.length >= 3) {
-      return p;
+  // Pass 3: Token-Set Intersection Match
+  // E.g. "courvoisier-xo" -> tokens ["courvoisier", "xo"]
+  // Matches "Courvoisier Cognac XO", "Courvoisier Imperial XO", etc.
+  const slugTokens = normalizedSlug.split("-").filter((t) => t.length > 0);
+  if (slugTokens.length > 0) {
+    let bestProduct: Product | undefined;
+    let maxMatchedTokens = 0;
+
+    for (const p of list) {
+      if (!p) continue;
+      const combinedText = slugify(`${p.producer || ""} ${p.name || ""} ${p.category || ""} ${p.origin || ""}`);
+      const productTokens = new Set(combinedText.split("-").filter((t) => t.length > 0));
+
+      const matchedCount = slugTokens.filter((token) => productTokens.has(token) || combinedText.includes(token)).length;
+
+      // If all slug tokens match this product
+      if (matchedCount === slugTokens.length && matchedCount > maxMatchedTokens) {
+        maxMatchedTokens = matchedCount;
+        bestProduct = p;
+      }
+    }
+
+    if (bestProduct) {
+      return bestProduct;
     }
   }
 

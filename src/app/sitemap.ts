@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getProductsFromSupabase } from "@/lib/supabase";
+import { getStoreProductsCatalog } from "@/lib/products";
 import { slugify } from "@/data/products";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://magnumliquors.com";
@@ -32,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dynamic Product Pages from Database
   let productRoutes: MetadataRoute.Sitemap = [];
   try {
-    const dbProducts = await getProductsFromSupabase();
+    const dbProducts = await getStoreProductsCatalog();
 
     if (Array.isArray(dbProducts) && dbProducts.length > 0) {
       productRoutes = dbProducts.map((p) => {

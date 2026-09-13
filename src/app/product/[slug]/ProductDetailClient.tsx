@@ -31,11 +31,13 @@ import { FastVideo, isVideoMedia } from "@/components/FastVideo";
 interface ProductDetailClientProps {
   initialSlug?: string;
   initialProduct?: Product;
+  initialRelatedProducts?: Product[];
 }
 
 export default function ProductDetailClient({
   initialSlug,
   initialProduct,
+  initialRelatedProducts,
 }: ProductDetailClientProps) {
   const params = useParams();
   const pathname = usePathname();
@@ -46,7 +48,7 @@ export default function ProductDetailClient({
   const currentSlug = String(initialSlug || paramSlug || pathSlug || "");
 
   const [product, setProduct] = useState<Product | undefined>(initialProduct);
-  const [productList, setProductList] = useState<Product[]>([]);
+  const [productList, setProductList] = useState<Product[]>(initialRelatedProducts || []);
   const [isLoading, setIsLoading] = useState(!initialProduct);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -97,7 +99,9 @@ export default function ProductDetailClient({
 
         // Find by slug (handles slugified name, compound name-origin, ID, and raw name)
         const found = getProductBySlug(currentSlug, allProducts);
-        setProduct(found);
+        if (found) {
+          setProduct(found);
+        }
       } catch (err) {
         console.warn("Failed to load store product details:", err);
       } finally {
@@ -436,6 +440,7 @@ export default function ProductDetailClient({
                 <Link
                   key={rel.id}
                   href={productHref(rel)}
+                  prefetch={true}
                   className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   <div className="flex items-center justify-between z-10">

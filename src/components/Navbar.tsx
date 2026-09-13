@@ -105,21 +105,21 @@ export function Navbar({
             Shop all
           </Link>
           <Link
-            href="/#shop"
+            href="/discover?category=Wine"
             onClick={() => setMenuOpen(false)}
             className="hover:text-[#b8860b] transition font-medium"
           >
             Wine
           </Link>
           <Link
-            href="/#shop"
+            href="/discover?category=Spirits"
             onClick={() => setMenuOpen(false)}
             className="hover:text-[#b8860b] transition font-medium"
           >
             Spirits
           </Link>
           <Link
-            href="/#shop"
+            href="/discover?category=Whiskey"
             onClick={() => setMenuOpen(false)}
             className="hover:text-[#b8860b] transition font-medium"
           >

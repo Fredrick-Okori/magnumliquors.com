@@ -440,6 +440,7 @@ function DiscoverContent() {
                     {/* Product Image Container */}
                     <Link
                       href={productHref(product)}
+                      prefetch={true}
                       className="relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl bg-[#fafafa]"
                     >
                       {/* Floating Upper Badge & Circular Arrow */}
@@ -496,7 +497,7 @@ function DiscoverContent() {
                           {product.producer} • {product.origin}
                         </span>
                         <h3 className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-lg font-bold text-neutral-900 mt-1">
-                          <Link href={productHref(product)} className="hover:text-[#b8860b] transition">
+                          <Link href={productHref(product)} prefetch={true} className="hover:text-[#b8860b] transition">
                             {product.name}
                           </Link>
                         </h3>

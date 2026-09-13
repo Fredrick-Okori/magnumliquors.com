@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import {
-  getProductsFromSupabase,
   createProductInSupabase,
   updateProductInSupabase,
   deleteProductFromSupabase,
@@ -10,92 +9,24 @@ import {
   SupabaseProductRow,
 } from "@/lib/supabase";
 import { Product, products as fallbackCatalog } from "@/data/products";
+import { getStoreProductsCatalog, invalidateProductCache } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
-const PRODUCT_CACHE_TTL_MS = 30_000;
-let productCache: { products: Product[]; expiresAt: number } | null = null;
-let productRequest: Promise<Product[]> | null = null;
-
-function invalidateProductCache() {
-  productCache = null;
-}
-
-async function loadProductCatalog(): Promise<Product[]> {
-  const cached = productCache;
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.products;
-  }
-
-  if (productRequest) return productRequest;
-
-  productRequest = (async () => {
-    const supabaseProducts = await getProductsFromSupabase();
-    const mappedList: Product[] = [];
-
-    if (supabaseProducts && supabaseProducts.length > 0) {
-      supabaseProducts.forEach((sp) => {
-        const rawPriceUGX = Number(sp.price || 0);
-        const numericUSD = Number((rawPriceUGX > 0 ? rawPriceUGX / 3700 : 94.59).toFixed(2));
-        const stock = Number(sp.quantity_in_stock ?? 50);
-
-        mappedList.push({
-          id: String(sp.id),
-          name: sp.name || "Untitled Spirit",
-          producer: sp.brand || "Magnum Reserve",
-          origin: sp.country_of_origin || "Kampala, Uganda",
-          category: sp.category || "Whiskey",
-          price: `UGX ${rawPriceUGX.toLocaleString()}`,
-          numericPrice: numericUSD,
-          buyingPrice: Number(sp.buying_price ?? 0),
-          abv: sp.abv ? `${sp.abv}% ABV` : "40.0% ABV",
-          volume: sp.volume_ml ? `${sp.volume_ml} ml` : "750 ml",
-          vintage: sp.vintage ? String(sp.vintage) : undefined,
-          rating: "Reserve Selection",
-          description: sp.description || "",
-          tastingNotes: {
-            nose: "Rich oak and honey",
-            palate: "Velvety spice and vanilla",
-            finish: "Smooth warming finish",
-            pairing: "Sip neat or on the rocks",
-          },
-          image: sp.image_url || "/products/premium-liquor-don-julio-70-uganda.jpg",
-          inStock: stock > 0 && sp.is_active !== false,
-          stockQuantity: stock,
-        });
-      });
-    }
-
-    const existingNames = new Set(mappedList.map((p) => p.name.toLowerCase()));
-    return [
-      ...mappedList,
-      ...fallbackCatalog.filter((fp) => !existingNames.has(fp.name.toLowerCase())),
-    ];
-  })();
-
-  try {
-    const products = await productRequest;
-    productCache = { products, expiresAt: Date.now() + PRODUCT_CACHE_TTL_MS };
-    return products;
-  } finally {
-    productRequest = null;
-  }
-}
-
 export async function GET() {
   try {
-    const finalProducts = await loadProductCatalog();
+    const finalProducts = await getStoreProductsCatalog();
 
     return NextResponse.json(finalProducts, {
       headers: {
-        "Cache-Control": "public, max-age=30, s-maxage=30, stale-while-revalidate=120",
+        "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
       },
     });
   } catch (error) {
     console.error("GET store-products error:", error);
     return NextResponse.json(fallbackCatalog, {
       headers: {
-        "Cache-Control": "public, max-age=30, s-maxage=30, stale-while-revalidate=120",
+        "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
       },
     });
   }

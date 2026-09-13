@@ -226,6 +226,7 @@ export default function Home() {
                   {/* Product Image Container Stretched Edge-to-Edge */}
                   <Link
                     href={productHref(product)}
+                    prefetch={true}
                     className={`relative flex aspect-[1.1] w-full items-center justify-center overflow-hidden rounded-2xl ${
                       isDark ? "bg-[#0c0a08]" : "bg-[#fafafa]"
                     }`}
@@ -290,7 +291,7 @@ export default function Home() {
 
                   {/* Bottom Row: Producer, Title & Price */}
                   <div className="flex items-end justify-between gap-3 pt-3 px-2 pb-1 z-10">
-                    <Link href={productHref(product)} className="group/title">
+                    <Link href={productHref(product)} prefetch={true} className="group/title">
                       <p className={`text-[11px] font-medium uppercase tracking-wider ${isDark ? "text-neutral-400" : "text-neutral-400"}`}>
                         {product.producer} · {product.category}
                       </p>
