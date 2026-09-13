@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { TrendingUp, RefreshCw } from "lucide-react";
+import { TrendingUp, RefreshCw, ShieldCheck } from "lucide-react";
 
 interface OrderItem {
   productName: string;
@@ -23,10 +23,16 @@ interface Order {
 export default function AnalyticsPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string>("Manager");
+
+  const isPrivileged = ["superadmin", "manager", "admin"].includes(userRole.toLowerCase());
 
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
+      const storedRole = localStorage.getItem("magnum_user_role");
+      if (storedRole) setUserRole(storedRole);
+
       const res = await fetch("/api/orders");
       const data = await res.json();
       if (data?.docs && Array.isArray(data.docs) && data.docs.length > 0) {
@@ -109,7 +115,7 @@ export default function AnalyticsPage() {
         <div>
           <h1 className="text-3xl font-extrabold text-[#18181b] tracking-tight">Analytics & Revenue Reports</h1>
           <p className="text-xs text-[#71717a] mt-1">
-            Real-time sales breakdown and month-end developer profit share calculated from {isLoading ? "—" : stats.count} order transactions.
+            Real-time sales breakdown and performance metrics from {isLoading ? "—" : stats.count} order transactions.
           </p>
         </div>
 
@@ -122,53 +128,96 @@ export default function AnalyticsPage() {
         </button>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
-          <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Gross Platform Volume (100%)</p>
-          {isLoading ? (
-            <div className="h-9 w-44 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-          ) : (
-            <p className="font-sans text-3xl font-extrabold tracking-tight text-[#18181b]">
-              UGX {stats.grossSalesUGX.toLocaleString()}
-            </p>
-          )}
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#b8860b] bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 rounded-full">
-            <TrendingUp size={14} /> Total Storefront Orders
-          </span>
-        </div>
-
-        <div className="rounded-3xl border border-[#d4af37]/40 bg-[#fffdf5] p-6 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-[#b8860b] uppercase tracking-wider">Developer Profit Share (25%)</p>
-            <span className="rounded-full bg-[#b8860b] text-white text-[9px] font-extrabold px-2 py-0.5 uppercase">Agreement</span>
+      {/* Role Notice for non-managers */}
+      {!isPrivileged && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 flex items-center justify-between text-xs text-amber-900 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <ShieldCheck size={20} className="text-[#b8860b] shrink-0" />
+            <div>
+              <p className="font-bold">Staff Operational View ({userRole || "Sales"})</p>
+              <p className="text-[11px] text-amber-800/80">
+                Full profit aggregations and financial revenue reports are restricted to Superadmins and Managers.
+              </p>
+            </div>
           </div>
-          {isLoading ? (
-            <div className="h-9 w-44 rounded-md bg-[#ebdcb2] animate-pulse my-1" />
-          ) : (
-            <p className="font-sans text-3xl font-extrabold tracking-tight text-[#b8860b]">
-              UGX {stats.devFeeUGX.toLocaleString()}
-            </p>
-          )}
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#b8860b] bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 rounded-full">
-            <TrendingUp size={14} /> 25% of gross profit · End of month
-          </span>
         </div>
+      )}
 
-        <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
-          <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Store Profit After Share (75%)</p>
-          {isLoading ? (
-            <div className="h-9 w-44 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-          ) : (
-            <p className="font-sans text-3xl font-extrabold tracking-tight text-[#16a34a]">
-              UGX {stats.netStorePayoutUGX.toLocaleString()}
-            </p>
-          )}
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#16a34a] bg-green-50 border border-green-200 px-2.5 py-0.5 rounded-full">
-            Net store revenue retained
-          </span>
+      {/* Metrics Row (Full Financials for Superadmins & Managers vs Order Volume for Staff) */}
+      {isPrivileged ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
+            <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Gross Platform Volume (100%)</p>
+            {isLoading ? (
+              <div className="h-9 w-44 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-3xl font-extrabold tracking-tight text-[#18181b]">
+                UGX {stats.grossSalesUGX.toLocaleString()}
+              </p>
+            )}
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#b8860b] bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 rounded-full">
+              <TrendingUp size={14} /> Total Storefront Orders
+            </span>
+          </div>
+
+          <div className="rounded-3xl border border-[#d4af37]/40 bg-[#fffdf5] p-6 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-[#b8860b] uppercase tracking-wider">Developer Profit Share (25%)</p>
+              <span className="rounded-full bg-[#b8860b] text-white text-[9px] font-extrabold px-2 py-0.5 uppercase">Agreement</span>
+            </div>
+            {isLoading ? (
+              <div className="h-9 w-44 rounded-md bg-[#ebdcb2] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-3xl font-extrabold tracking-tight text-[#b8860b]">
+                UGX {stats.devFeeUGX.toLocaleString()}
+              </p>
+            )}
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#b8860b] bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 rounded-full">
+              <TrendingUp size={14} /> 25% of gross profit · End of month
+            </span>
+          </div>
+
+          <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
+            <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Store Profit After Share (75%)</p>
+            {isLoading ? (
+              <div className="h-9 w-44 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-3xl font-extrabold tracking-tight text-[#16a34a]">
+                UGX {stats.netStorePayoutUGX.toLocaleString()}
+              </p>
+            )}
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#16a34a] bg-green-50 border border-green-200 px-2.5 py-0.5 rounded-full">
+              Net store revenue retained
+            </span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
+            <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Total Storefront Orders</p>
+            {isLoading ? (
+              <div className="h-9 w-20 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+            ) : (
+              <p className="font-sans text-3xl font-extrabold tracking-tight text-[#18181b]">
+                {stats.count}
+              </p>
+            )}
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#475569] bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-full">
+              Non-cancelled customer orders
+            </span>
+          </div>
+
+          <div className="rounded-3xl border border-[#e5e5e4] bg-white p-6 shadow-2xs space-y-2">
+            <p className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Top Selling Category Mix</p>
+            <p className="font-sans text-2xl font-extrabold tracking-tight text-[#b8860b]">
+              Spirits {stats.spiritsPct}% · Wine {stats.winePct}%
+            </p>
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#b8860b] bg-[#fffcf0] border border-[#f3e5b8] px-2.5 py-0.5 rounded-full">
+              Catalog Category Distribution
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-3xl border border-[#e5e5e4] bg-white p-8 shadow-2xs space-y-4">
         <h2 className="text-lg font-bold text-[#18181b]">Top Category Sales Breakdown</h2>

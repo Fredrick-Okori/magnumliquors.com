@@ -56,10 +56,8 @@ interface Order {
   priority?: "High" | "Medium" | "Low";
 }
 
-const initialOrders: Order[] = [];
-
 export default function DashboardOverviewPage() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [productsList, setProductsList] = useState<Product[]>(fallbackProducts);
   const [teamMembersList, setTeamMembersList] = useState<Array<{ id: string; name: string; role: string }>>([]);
   const [selectedEmployee, setSelectedEmployee] = useState("All Employees");
@@ -68,10 +66,16 @@ export default function DashboardOverviewPage() {
   const [quickDateFilter, setQuickDateFilter] = useState<"all" | "today" | "this_month" | "last_month">("all");
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string>("Manager");
+
+  const isPrivileged = ["superadmin", "manager", "admin"].includes(userRole.toLowerCase());
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
+      const storedRole = localStorage.getItem("magnum_user_role");
+      if (storedRole) setUserRole(storedRole);
+
       const [prodRes, teamRes, orderRes] = await Promise.all([
         fetch("/api/store-products"),
         fetch("/api/team/users"),
@@ -356,345 +360,165 @@ export default function DashboardOverviewPage() {
         </div>
       </div>
 
-      {/* PRIMARY FINANCIAL METRICS ROW (Calculated dynamically) */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        
-        {/* 1. Gross Stock: current selling-price value of inventory */}
-        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
-            <TrendingUp size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="block text-[11px] font-semibold text-[#71717a]">Gross Stock</span>
-            {isLoading ? (
-              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-                {finances.grossStockUGX.toLocaleString()}
+      {/* ROLE NOTICE FOR STAFF / SALES USERS */}
+      {!isPrivileged && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 flex items-center justify-between text-xs text-amber-900 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <ShieldCheck size={20} className="text-[#b8860b] shrink-0" />
+            <div>
+              <p className="font-bold">Staff Operational View ({userRole || "Sales"})</p>
+              <p className="text-[11px] text-amber-800/80">
+                Full financial profit aggregations, developer settlements, and bank/MoMo balances are restricted to Superadmins and Managers.
               </p>
-            )}
-            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
-          </div>
-        </div>
-
-        {/* 2. Total Received */}
-        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
-            <CreditCard size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-[#71717a] block">Total Received</span>
-            {isLoading ? (
-              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-                {finances.totalReceivedUGX.toLocaleString()}
-              </p>
-            )}
-            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
-          </div>
-        </div>
-
-        {/* 3. Total Orders */}
-        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#475569] text-white flex items-center justify-center shadow-xs">
-            <PackageCheck size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-[#71717a] block">Total Orders</span>
-            {isLoading ? (
-              <div className="h-7 w-12 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.orderCount}</p>
-            )}
-            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Non-cancelled</span>
-          </div>
-        </div>
-
-        {/* 4. Orders Completed */}
-        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
-            <ShieldCheck size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-emerald-700 block">Orders Completed</span>
-            {isLoading ? (
-              <div className="h-7 w-12 rounded-md bg-emerald-200/80 animate-pulse my-1" />
-            ) : (
-              <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.completedOrderCount}</p>
-            )}
-            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Delivered</span>
-          </div>
-        </div>
-
-        {/* 5. Gross Profit */}
-        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
-            <TrendingUp size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-[#71717a] block">Completed Gross Profit</span>
-            {isLoading ? (
-              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.totalGrossProfitUGX.toLocaleString()}</p>
-            )}
-            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">UGX</span>
-          </div>
-        </div>
-
-        {/* 6. Developer Commission (25% of completed gross profit) */}
-        <div className="relative flex min-w-0 min-h-[132px] items-center gap-4 overflow-hidden rounded-2xl border border-[#d4af37]/40 bg-[#fffdf5] p-5 pt-10 shadow-xs sm:pt-5">
-          <div className="absolute right-2.5 top-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#b8860b] text-white px-2 py-0.5 text-[9px] font-extrabold tracking-wide uppercase shadow-2xs">
-              Agreement 25%
-            </span>
-          </div>
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
-            <Code2 size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-bold text-[#b8860b] block">Dev Fee (25% Profit)</span>
-            {isLoading ? (
-              <div className="h-7 w-28 rounded-md bg-[#ebdcb2] animate-pulse my-1" />
-            ) : (
-              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-                {finances.developerCommissionUGX.toLocaleString()}
-              </p>
-            )}
-            <div className="flex items-center gap-1 text-[10px] text-[#71717a] font-sans">
-              <span className="font-bold uppercase tracking-wider text-[#b8860b]">UGX</span>
-              {!isLoading && <span>• ≈ ${finances.developerCommissionUSD.toLocaleString()} USD</span>}
             </div>
           </div>
         </div>
+      )}
 
-        {/* 7. Store Owner Profit (75% of gross profit) */}
-        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
-            <Coins size={20} />
+      {/* METRICS ROW (Full Aggregations for Superadmins & Managers vs Operational View for Staff) */}
+      {isPrivileged ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          
+          {/* 1. Gross Stock: current selling-price value of inventory */}
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
+              <TrendingUp size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="block text-[11px] font-semibold text-[#71717a]">Gross Stock</span>
+              {isLoading ? (
+                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                  {finances.grossStockUGX.toLocaleString()}
+                </p>
+              )}
+              <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-[#71717a] block">Store Profit (75%)</span>
-            {isLoading ? (
-              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-                {finances.storeNetPayoutUGX.toLocaleString()}
-              </p>
-            )}
-            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
-          </div>
-        </div>
 
-        {/* 5. Invoices (Pending Accounts) */}
-        <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
-          <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-xs">
-            <FileText size={20} />
+          {/* 2. Total Received */}
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
+              <CreditCard size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-[#71717a] block">Total Received</span>
+              {isLoading ? (
+                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                  {finances.totalReceivedUGX.toLocaleString()}
+                </p>
+              )}
+              <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-[#71717a] block">Invoices (Pending)</span>
-            {isLoading ? (
-              <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
-                {finances.invoicesUGX.toLocaleString()}
-              </p>
-            )}
-            <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+
+          {/* 3. Total Orders */}
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#475569] text-white flex items-center justify-center shadow-xs">
+              <PackageCheck size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-[#71717a] block">Total Orders</span>
+              {isLoading ? (
+                <div className="h-7 w-12 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.orderCount}</p>
+              )}
+              <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Non-cancelled</span>
+            </div>
           </div>
-        </div>
 
-      </div>
+          {/* 4. Orders Completed */}
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
+              <ShieldCheck size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-emerald-700 block">Orders Completed</span>
+              {isLoading ? (
+                <div className="h-7 w-12 rounded-md bg-emerald-200/80 animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.completedOrderCount}</p>
+              )}
+              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Delivered</span>
+            </div>
+          </div>
 
-      {/* DEVELOPER AGREEMENT & MONTH-END SETTLEMENT CARD */}
-      <div className="rounded-3xl border border-[#d4af37]/30 bg-gradient-to-br from-[#fffdfa] to-[#faf6ed] p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ebdcb2]/60 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+          {/* 5. Gross Profit */}
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center shadow-xs">
+              <TrendingUp size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-[#71717a] block">Completed Gross Profit</span>
+              {isLoading ? (
+                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.totalGrossProfitUGX.toLocaleString()}</p>
+              )}
+              <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">UGX</span>
+            </div>
+          </div>
+
+          {/* 6. Developer Commission (25% of completed gross profit) */}
+          <div className="relative flex min-w-0 min-h-[132px] items-center gap-4 overflow-hidden rounded-2xl border border-[#d4af37]/40 bg-[#fffdf5] p-5 pt-10 shadow-xs sm:pt-5">
+            <div className="absolute right-2.5 top-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#b8860b] text-white px-2 py-0.5 text-[9px] font-extrabold tracking-wide uppercase shadow-2xs">
+                Agreement 25%
+              </span>
+            </div>
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
               <Code2 size={20} />
             </div>
-            <div>
-              <h3 className="text-base font-extrabold text-[#18181b] tracking-tight">
-                Developer Platform Commission & Settlement Breakdown
-              </h3>
-              <p className="text-xs text-[#71717a] mt-0.5">
-                Agreement terms: <span className="font-bold text-[#b8860b]">25% of gross profit</span> from completed (Delivered) orders, settled at month end.
-              </p>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-bold text-[#b8860b] block">Dev Fee (25% Profit)</span>
+              {isLoading ? (
+                <div className="h-7 w-28 rounded-md bg-[#ebdcb2] animate-pulse my-1" />
+              ) : (
+                <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                  {finances.developerCommissionUGX.toLocaleString()}
+                </p>
+              )}
+              <div className="flex items-center gap-1 text-[10px] text-[#71717a] font-sans">
+                <span className="font-bold uppercase tracking-wider text-[#b8860b]">UGX</span>
+                {!isLoading && <span>• ≈ ${finances.developerCommissionUSD.toLocaleString()} USD</span>}
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fffcf0] border border-[#f3e5b8] px-3.5 py-1 text-xs font-bold text-[#b8860b]">
-              <ShieldCheck size={14} className="text-[#b8860b]" /> End-of-Month Settlement
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
-          <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
-            <p className="text-[11px] font-bold text-[#71717a] uppercase tracking-wider">Gross Platform Volume</p>
-            {isLoading ? (
-              <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="font-sans text-xl font-extrabold text-[#18181b]">
-                UGX {finances.totalSalesUGX.toLocaleString()}
-              </p>
-            )}
-            {isLoading ? (
-              <div className="h-3 w-36 bg-[#e4e4e7] rounded animate-pulse my-1" />
-            ) : (
-              <p className="text-[10px] text-[#71717a]">
-                Selling-price value of {productsList.reduce((sum, product) => sum + (product.stockQuantity ?? 0), 0).toLocaleString()} bottles in stock
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-2xl bg-[#fffcf0] p-4 border border-[#f3e5b8] space-y-1 shadow-2xs">
-            <p className="text-[11px] font-bold text-[#b8860b] uppercase tracking-wider">Developer 25% Profit Share</p>
-            {isLoading ? (
-              <div className="h-6 w-32 rounded-md bg-[#ebdcb2] animate-pulse my-1" />
-            ) : (
-              <p className="font-sans text-xl font-extrabold text-[#b8860b]">
-                UGX {finances.developerCommissionUGX.toLocaleString()}
-              </p>
-            )}
-            <p className="text-[10px] text-[#854d0e] font-semibold">Total payout due to developer</p>
-            {isLoading ? (
-              <div className="h-3 w-40 bg-[#f3e5b8] rounded animate-pulse my-1" />
-            ) : (
-              <p className="text-[10px] text-[#71717a]">
-                Base: UGX {finances.totalGrossProfitUGX.toLocaleString()} completed gross profit
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
-            <p className="text-[11px] font-bold text-[#16a34a] uppercase tracking-wider">Collected / Cleared Share</p>
-            {isLoading ? (
-              <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="font-sans text-xl font-extrabold text-[#16a34a]">
-                UGX {finances.developerPaidCommissionUGX.toLocaleString()}
-              </p>
-            )}
-            {isLoading ? (
-              <div className="h-3 w-32 bg-[#e4e4e7] rounded animate-pulse my-1" />
-            ) : (
-              <p className="text-[10px] text-[#71717a]">Based on {finances.completedOrderCount} completed orders</p>
-            )}
-          </div>
-
-          <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
-            <p className="text-[11px] font-bold text-[#18181b] uppercase tracking-wider">Store Profit Retained (75%)</p>
-            {isLoading ? (
-              <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-            ) : (
-              <p className="font-sans text-xl font-extrabold text-[#18181b]">
-                UGX {finances.storeNetPayoutUGX.toLocaleString()}
-              </p>
-            )}
-            <p className="text-[10px] text-[#71717a]">Remaining completed gross profit after developer share</p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-white/70 border border-[#ebdcb2]/60 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-extrabold bg-[#f4f4f3] px-2 py-0.5 rounded border border-[#e4e4e7] text-[#18181b]">
-              FORMULA: Completed Gross Profit × 0.25
-            </span>
-            <span className="text-[#71717a]">
-              Calculation updates when orders become Delivered and products have a buying price.
-            </span>
-          </div>
-          <div className="font-sans font-bold text-[#18181b] text-xs">
-            Pending Collection: <span className="text-[#d97706]">{isLoading ? "—" : `UGX ${finances.developerPendingCommissionUGX.toLocaleString()}`}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* PAYMENT BREAKDOWN SECTION (Calculated dynamically) */}
-      <div className="space-y-3 pt-2">
-        <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#8e8e8e]">
-          PAYMENT BREAKDOWN (FROM ORDERS)
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          
-          {/* Airtel Account */}
-          <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
-            <img
-              src="/constants/Airtel_logo.svg.png"
-              alt="Airtel Money"
-              className="h-14 w-16 shrink-0 object-contain"
-            />
+          {/* 7. Store Owner Profit (75% of gross profit) */}
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
+              <Coins size={20} />
+            </div>
             <div className="min-w-0 flex-1">
-              <span className="text-[11px] font-semibold text-[#71717a] block">Airtel Account</span>
+              <span className="text-[11px] font-semibold text-[#71717a] block">Store Profit (75%)</span>
               {isLoading ? (
                 <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
               ) : (
-                <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-                  {finances.airtelUGX.toLocaleString()}
+                <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                  {finances.storeNetPayoutUGX.toLocaleString()}
                 </p>
               )}
               <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
             </div>
           </div>
 
-          {/* MTN Account */}
-          <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
-            <img
-              src="/constants/MoMo-logo-1.png"
-              alt="MTN Mobile Money"
-              className="h-14 w-16 shrink-0 object-contain"
-            />
-            <div className="min-w-0 flex-1">
-              <span className="text-[11px] font-semibold text-[#71717a] block">MTN Account</span>
-              {isLoading ? (
-                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-              ) : (
-                <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-                  {finances.mtnUGX.toLocaleString()}
-                </p>
-              )}
-              <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+          {/* 8. Invoices (Pending Accounts) */}
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-xs">
+              <FileText size={20} />
             </div>
-          </div>
-
-          {/* Visa Card Account */}
-          <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
-            <img
-              src="/constants/Visa_Inc.-Logo.wine.png"
-              alt="Visa Card"
-              className="h-14 w-16 shrink-0 object-contain"
-            />
             <div className="min-w-0 flex-1">
-              <span className="text-[11px] font-semibold text-[#71717a] block">Visa Card Account</span>
+              <span className="text-[11px] font-semibold text-[#71717a] block">Invoices (Pending)</span>
               {isLoading ? (
                 <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
               ) : (
-                <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-                  {finances.cardUGX.toLocaleString()}
-                </p>
-              )}
-              <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
-            </div>
-          </div>
-
-          {/* Cash */}
-          <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
-            <img
-              src="/constants/minimalist-money-logo-design-template-cash-money-for-business-finance-money-investing-logo-vector.jpg"
-              alt="Cash"
-              className="h-14 w-16 shrink-0 object-cover rounded-xl"
-            />
-            <div className="min-w-0 flex-1">
-              <span className="text-[11px] font-semibold text-[#71717a] block">Cash</span>
-              {isLoading ? (
-                <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
-              ) : (
-                <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
-                  {finances.cashPaymentUGX.toLocaleString()}
+                <p className="break-words font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                  {finances.invoicesUGX.toLocaleString()}
                 </p>
               )}
               <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
@@ -702,7 +526,275 @@ export default function DashboardOverviewPage() {
           </div>
 
         </div>
-      </div>
+      ) : (
+        /* Operational Metrics for Staff / Sales */
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-white p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#475569] text-white flex items-center justify-center shadow-xs">
+              <PackageCheck size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-[#71717a] block">Total Store Orders</span>
+              {isLoading ? (
+                <div className="h-7 w-12 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.orderCount}</p>
+              )}
+              <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Recorded Orders</span>
+            </div>
+          </div>
+
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#16a34a] text-white flex items-center justify-center shadow-xs">
+              <ShieldCheck size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-emerald-700 block">Orders Delivered</span>
+              {isLoading ? (
+                <div className="h-7 w-12 rounded-md bg-emerald-200/80 animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">{finances.completedOrderCount}</p>
+              )}
+              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Fulfilled</span>
+            </div>
+          </div>
+
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-xs">
+              <RefreshCw size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-amber-800 block">In-Flight Deliveries</span>
+              {isLoading ? (
+                <div className="h-7 w-12 rounded-md bg-amber-200/80 animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                  {Math.max(0, finances.orderCount - finances.completedOrderCount)}
+                </p>
+              )}
+              <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Processing / En Route</span>
+            </div>
+          </div>
+
+          <div className="flex min-w-0 min-h-[132px] items-center gap-4 rounded-2xl border border-[#e5e5e4] bg-white p-5 shadow-2xs">
+            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center shadow-xs">
+              <Wine size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-[#71717a] block">Inventory in Stock</span>
+              {isLoading ? (
+                <div className="h-7 w-16 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold tracking-tight text-[#18181b] sm:text-2xl">
+                  {productsList.reduce((sum, product) => sum + (product.stockQuantity ?? 0), 0).toLocaleString()}
+                </p>
+              )}
+              <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Total Bottles</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEVELOPER AGREEMENT & MONTH-END SETTLEMENT CARD (Superadmins and Managers Only) */}
+      {isPrivileged && (
+        <div className="rounded-3xl border border-[#d4af37]/30 bg-gradient-to-br from-[#fffdfa] to-[#faf6ed] p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ebdcb2]/60 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-[#b8860b] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                <Code2 size={20} />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-[#18181b] tracking-tight">
+                  Developer Platform Commission & Settlement Breakdown
+                </h3>
+                <p className="text-xs text-[#71717a] mt-0.5">
+                  Agreement terms: <span className="font-bold text-[#b8860b]">25% of gross profit</span> from completed (Delivered) orders, settled at month end.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fffcf0] border border-[#f3e5b8] px-3.5 py-1 text-xs font-bold text-[#b8860b]">
+                <ShieldCheck size={14} className="text-[#b8860b]" /> End-of-Month Settlement
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
+            <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
+              <p className="text-[11px] font-bold text-[#71717a] uppercase tracking-wider">Gross Platform Volume</p>
+              {isLoading ? (
+                <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold text-[#18181b]">
+                  UGX {finances.totalSalesUGX.toLocaleString()}
+                </p>
+              )}
+              {isLoading ? (
+                <div className="h-3 w-36 bg-[#e4e4e7] rounded animate-pulse my-1" />
+              ) : (
+                <p className="text-[10px] text-[#71717a]">
+                  Selling-price value of {productsList.reduce((sum, product) => sum + (product.stockQuantity ?? 0), 0).toLocaleString()} bottles in stock
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-2xl bg-[#fffcf0] p-4 border border-[#f3e5b8] space-y-1 shadow-2xs">
+              <p className="text-[11px] font-bold text-[#b8860b] uppercase tracking-wider">Developer 25% Profit Share</p>
+              {isLoading ? (
+                <div className="h-6 w-32 rounded-md bg-[#ebdcb2] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold text-[#b8860b]">
+                  UGX {finances.developerCommissionUGX.toLocaleString()}
+                </p>
+              )}
+              <p className="text-[10px] text-[#854d0e] font-semibold">Total payout due to developer</p>
+              {isLoading ? (
+                <div className="h-3 w-40 bg-[#f3e5b8] rounded animate-pulse my-1" />
+              ) : (
+                <p className="text-[10px] text-[#71717a]">
+                  Base: UGX {finances.totalGrossProfitUGX.toLocaleString()} completed gross profit
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
+              <p className="text-[11px] font-bold text-[#16a34a] uppercase tracking-wider">Collected / Cleared Share</p>
+              {isLoading ? (
+                <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold text-[#16a34a]">
+                  UGX {finances.developerPaidCommissionUGX.toLocaleString()}
+                </p>
+              )}
+              {isLoading ? (
+                <div className="h-3 w-32 bg-[#e4e4e7] rounded animate-pulse my-1" />
+              ) : (
+                <p className="text-[10px] text-[#71717a]">Based on {finances.completedOrderCount} completed orders</p>
+              )}
+            </div>
+
+            <div className="rounded-2xl bg-white p-4 border border-[#ebdcb2]/60 space-y-1 shadow-2xs">
+              <p className="text-[11px] font-bold text-[#18181b] uppercase tracking-wider">Store Profit Retained (75%)</p>
+              {isLoading ? (
+                <div className="h-6 w-32 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+              ) : (
+                <p className="font-sans text-xl font-extrabold text-[#18181b]">
+                  UGX {finances.storeNetPayoutUGX.toLocaleString()}
+                </p>
+              )}
+              <p className="text-[10px] text-[#71717a]">Remaining completed gross profit after developer share</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white/70 border border-[#ebdcb2]/60 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-extrabold bg-[#f4f4f3] px-2 py-0.5 rounded border border-[#e4e4e7] text-[#18181b]">
+                FORMULA: Completed Gross Profit × 0.25
+              </span>
+              <span className="text-[#71717a]">
+                Calculation updates when orders become Delivered and products have a buying price.
+              </span>
+            </div>
+            <div className="font-sans font-bold text-[#18181b] text-xs">
+              Pending Collection: <span className="text-[#d97706]">{isLoading ? "—" : `UGX ${finances.developerPendingCommissionUGX.toLocaleString()}`}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PAYMENT BREAKDOWN SECTION (Superadmins and Managers Only) */}
+      {isPrivileged && (
+        <div className="space-y-3 pt-2">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#8e8e8e]">
+            PAYMENT BREAKDOWN (FROM ORDERS)
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            {/* Airtel Account */}
+            <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+              <img
+                src="/constants/Airtel_logo.svg.png"
+                alt="Airtel Money"
+                className="h-14 w-16 shrink-0 object-contain"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-semibold text-[#71717a] block">Airtel Account</span>
+                {isLoading ? (
+                  <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+                ) : (
+                  <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+                    {finances.airtelUGX.toLocaleString()}
+                  </p>
+                )}
+                <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+              </div>
+            </div>
+
+            {/* MTN Account */}
+            <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+              <img
+                src="/constants/MoMo-logo-1.png"
+                alt="MTN Mobile Money"
+                className="h-14 w-16 shrink-0 object-contain"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-semibold text-[#71717a] block">MTN Account</span>
+                {isLoading ? (
+                  <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+                ) : (
+                  <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+                    {finances.mtnUGX.toLocaleString()}
+                  </p>
+                )}
+                <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+              </div>
+            </div>
+
+            {/* Visa Card Account */}
+            <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+              <img
+                src="/constants/Visa_Inc.-Logo.wine.png"
+                alt="Visa Card"
+                className="h-14 w-16 shrink-0 object-contain"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-semibold text-[#71717a] block">Visa Card Account</span>
+                {isLoading ? (
+                  <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+                ) : (
+                  <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+                    {finances.cardUGX.toLocaleString()}
+                  </p>
+                )}
+                <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+              </div>
+            </div>
+
+            {/* Cash */}
+            <div className="rounded-2xl border border-[#e5e5e4] bg-[#f7f7f6] p-5 flex items-center gap-4 shadow-2xs">
+              <img
+                src="/constants/minimalist-money-logo-design-template-cash-money-for-business-finance-money-investing-logo-vector.jpg"
+                alt="Cash"
+                className="h-14 w-16 shrink-0 object-cover rounded-xl"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-semibold text-[#71717a] block">Cash</span>
+                {isLoading ? (
+                  <div className="h-7 w-28 rounded-md bg-[#e4e4e7] animate-pulse my-1" />
+                ) : (
+                  <p className="font-sans text-2xl font-extrabold tracking-tight text-[#18181b]">
+                    {finances.cashPaymentUGX.toLocaleString()}
+                  </p>
+                )}
+                <span className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider font-sans">UGX</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* QUICK INVENTORY & RECENT ORDERS SHORTCUTS ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
