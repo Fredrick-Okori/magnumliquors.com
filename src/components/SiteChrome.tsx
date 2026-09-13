@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { Footer } from "./Footer";
 import { CartProvider, useCart } from "./CartContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -13,17 +12,6 @@ import { CookieConsent } from "./CookieConsent";
 
 function ChromeContent({ children }: { children: React.ReactNode }) {
   const { count } = useCart();
-  const pathname = usePathname();
-
-  // Omit storefront chrome on Dashboard & Auth routes
-  const isDashboardRoute =
-    pathname?.startsWith("/api") ||
-    pathname?.startsWith("/dashboard") ||
-    pathname?.startsWith("/login");
-
-  if (isDashboardRoute) {
-    return <>{children}</>;
-  }
 
   return (
     <>

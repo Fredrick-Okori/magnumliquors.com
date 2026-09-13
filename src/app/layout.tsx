@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans, Afacad_Flux } from "next/font/google";
-import { SiteChrome } from "@/components/SiteChrome";
 import { StoreJsonLd } from "@/components/JsonLd";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -123,7 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <SpeedInsights />
-        <SiteChrome>{children}</SiteChrome>
+        {children}
       </body>
     </html>
   );

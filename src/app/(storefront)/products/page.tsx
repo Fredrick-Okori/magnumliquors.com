@@ -1,4 +1,4 @@
-import DiscoverPage from "@/app/discover/page";
+import DiscoverPage from "../discover/page";
 
 export default function ProductsIndexPage() {
   return <DiscoverPage />;
