@@ -77,22 +77,14 @@ function DiscoverContent() {
   }, [categoryParam, searchParam]);
 
   useEffect(() => {
-    fetch("/api/store-products", { cache: "force-cache" })
-      .then((res) => res.json())
+    fetch("/api/store-products", { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Product request failed: ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
         const apiList = Array.isArray(data) ? data : [];
-        try {
-          localStorage.removeItem("magnum_added_products");
-        } catch (e) {}
-
-        let deletedIds = new Set<string>();
-        try {
-          const raw = localStorage.getItem("magnum_deleted_product_ids");
-          deletedIds = new Set(raw ? JSON.parse(raw) : []);
-        } catch (e) {}
-
-        const filtered = apiList.filter((p) => !deletedIds.has(String(p.id)));
-        setProductList(filtered);
+        setProductList(apiList);
       })
       .catch((err) => console.warn("Failed to load store products:", err))
       .finally(() => setIsLoading(false));

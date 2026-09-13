@@ -25,7 +25,7 @@ export function Navbar({
   useEffect(() => {
     if (!searchOpen || products.length > 0) return;
 
-    fetch("/api/store-products", { cache: "force-cache" })
+    fetch("/api/store-products", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setProducts(Array.isArray(data) ? data : []))
       .catch(() => setProducts([]));

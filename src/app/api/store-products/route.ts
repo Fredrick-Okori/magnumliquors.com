@@ -19,14 +19,14 @@ export async function GET() {
 
     return NextResponse.json(finalProducts, {
       headers: {
-        "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
+        "Cache-Control": "no-store",
       },
     });
   } catch (error) {
     console.error("GET store-products error:", error);
     return NextResponse.json(fallbackCatalog, {
       headers: {
-        "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
+        "Cache-Control": "no-store",
       },
     });
   }
