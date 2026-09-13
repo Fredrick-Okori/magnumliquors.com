@@ -9,6 +9,7 @@ import { Navbar } from "./Navbar";
 import { AgeGate } from "./AgeGate";
 import { ScrollBrandBanner } from "./ScrollBrandBanner";
 import { HeroNavStrip } from "./HeroNavStrip";
+import { CookieConsent } from "./CookieConsent";
 
 function ChromeContent({ children }: { children: React.ReactNode }) {
   const { count } = useCart();
@@ -32,6 +33,7 @@ function ChromeContent({ children }: { children: React.ReactNode }) {
       {children}
       <ScrollBrandBanner />
       <Footer />
+      <CookieConsent />
     </>
   );
 }

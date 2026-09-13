@@ -60,10 +60,7 @@ export async function POST(request: Request) {
 
     if (error) {
       console.warn("Supabase create expense notice:", error.message);
-      return NextResponse.json({
-        success: true,
-        expense: { id: `EXP-${Date.now()}`, ...body, amountUGX, amountUSD },
-      });
+      return NextResponse.json({ success: false, error: "Unable to save expense" }, { status: 503 });
     }
 
     return NextResponse.json({ success: true, expense: data?.[0] });

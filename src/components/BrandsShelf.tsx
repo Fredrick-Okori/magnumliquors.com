@@ -70,7 +70,11 @@ export function BrandsShelf() {
               <div className="relative flex h-full w-full items-center justify-center">
                 <img
                   src={brand.logo}
-                  alt={brand.name}
+                  alt={`${brand.name} official distillery brand partner - Magnum Liquors Kampala`}
+                  width={160}
+                  height={64}
+                  loading="lazy"
+                  decoding="async"
                   className="max-h-16 sm:max-h-20 max-w-full object-contain"
                 />
               </div>

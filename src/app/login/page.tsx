@@ -49,7 +49,9 @@ export default function DashboardLoginPage() {
       <div className="hidden lg:block relative w-full h-full min-h-screen overflow-hidden bg-neutral-900">
         <img
           src="/Screenshot 2026-08-22 at 22.19.56.png"
-          alt="Magnum Cellar"
+          alt="Magnum Cellar Vault - Luxury Wine & Spirits Merchant"
+          loading="eager"
+          decoding="async"
           className="h-full w-full object-cover object-center"
         />
      
@@ -63,9 +65,9 @@ export default function DashboardLoginPage() {
         {/* Center Form Area */}
         <div className="my-auto py-8 space-y-8">
           <div className="space-y-2">
-            <h2 className="text-4xl font-extrabold text-[#18181b] tracking-tight">
-              Login
-            </h2>
+            <h1 className="text-4xl font-extrabold text-[#18181b] tracking-tight">
+              Magnum Operations Login
+            </h1>
             <p className="text-sm text-[#52525b] font-medium">
               Log in to access store operations dashboard
             </p>

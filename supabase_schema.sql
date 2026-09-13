@@ -2,7 +2,7 @@
 -- MAGNUM FINE WINE & SPIRITS — COMPLETE SUPABASE POSTGRESQL SCHEMA
 -- Categories: Whiskey, Rum, Vodka, Liqueur, Gin, Tequila, Brandy, Champagne, Wine
 -- Includes: Hierarchical Categories, Subcategories, Products Table, Orders with
---           10% Developer Agreement Commission, Expenses, Profiles, and Permissive RLS
+--           25% Developer Gross-Profit Share, Expenses, Profiles, and Permissive RLS
 -- ============================================================================
 
 -- 1. EXTENSIONS
@@ -203,7 +203,7 @@ CREATE INDEX IF NOT EXISTS idx_products_category ON public.products (category);
 CREATE INDEX IF NOT EXISTS idx_products_category_id ON public.products (category_id);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products (is_active);
 
--- 6. ORDERS TABLE (10% Developer Platform Agreement Commission)
+-- 6. ORDERS TABLE (25% Developer Gross-Profit Share)
 CREATE TABLE IF NOT EXISTS public.orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_number VARCHAR(100) UNIQUE NOT NULL,
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     payment_status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     total_amount_usd NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     total_amount_ugx NUMERIC(15, 2) NOT NULL DEFAULT 0.00,
-    commission_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.10,
+    commission_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.25,
     items JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -224,11 +224,19 @@ CREATE TABLE IF NOT EXISTS public.orders (
 
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total_amount_usd NUMERIC(10, 2) DEFAULT 0.00;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total_amount_ugx NUMERIC(15, 2) DEFAULT 0.00;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS commission_rate NUMERIC(5, 2) DEFAULT 0.10;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS system_commission_usd NUMERIC(10, 2) GENERATED ALWAYS AS (ROUND(total_amount_usd * 0.10, 2)) STORED;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS system_commission_ugx NUMERIC(15, 2) GENERATED ALWAYS AS (ROUND(total_amount_ugx * 0.10, 2)) STORED;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS net_payout_usd NUMERIC(10, 2) GENERATED ALWAYS AS (ROUND(total_amount_usd * 0.90, 2)) STORED;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS net_payout_ugx NUMERIC(15, 2) GENERATED ALWAYS AS (ROUND(total_amount_ugx * 0.90, 2)) STORED;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS commission_rate NUMERIC(5, 2) DEFAULT 0.25;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS gross_profit_ugx NUMERIC(15, 2) DEFAULT 0.00;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS developer_profit_share_ugx NUMERIC(15, 2) DEFAULT 0.00;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS store_profit_ugx NUMERIC(15, 2) DEFAULT 0.00;
+-- Replace legacy 10% generated columns with explicit settlement values.
+ALTER TABLE public.orders DROP COLUMN IF EXISTS system_commission_usd;
+ALTER TABLE public.orders DROP COLUMN IF EXISTS system_commission_ugx;
+ALTER TABLE public.orders DROP COLUMN IF EXISTS net_payout_usd;
+ALTER TABLE public.orders DROP COLUMN IF EXISTS net_payout_ugx;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS system_commission_usd NUMERIC(10, 2) DEFAULT 0.00;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS system_commission_ugx NUMERIC(15, 2) DEFAULT 0.00;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS net_payout_usd NUMERIC(10, 2) DEFAULT 0.00;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS net_payout_ugx NUMERIC(15, 2) DEFAULT 0.00;
 
 CREATE INDEX IF NOT EXISTS idx_orders_order_number ON public.orders (order_number);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders (created_at);

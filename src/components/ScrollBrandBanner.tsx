@@ -45,9 +45,9 @@ export function ScrollBrandBanner() {
           opacity,
         }}
       >
-        <h1 className="font-serif text-[11vw] sm:text-[13vw] font-black uppercase tracking-tighter leading-none text-[#d4af37] text-gold-gradient drop-shadow-[0_10px_35px_rgba(212,175,55,0.3)] whitespace-nowrap px-4">
+        <p className="font-serif text-[11vw] sm:text-[13vw] font-black uppercase tracking-tighter leading-none text-[#d4af37] text-gold-gradient drop-shadow-[0_10px_35px_rgba(212,175,55,0.3)] whitespace-nowrap px-4 select-none">
           MAGNUM LIQUORS
-        </h1>
+        </p>
       </div>
     </div>
   );

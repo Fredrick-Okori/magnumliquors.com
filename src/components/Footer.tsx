@@ -128,28 +128,28 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 font-light text-neutral-400">
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
+                <Link href="/discover?category=Whiskey" className="hover:text-[#d4af37] transition">
                   Rare Single Malts
                 </Link>
               </li>
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
+                <Link href="/discover?category=Wine" className="hover:text-[#d4af37] transition">
                   Estate Vintage Wines
                 </Link>
               </li>
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
+                <Link href="/discover?category=Whiskey" className="hover:text-[#d4af37] transition">
                   Small Batch Bourbon
                 </Link>
               </li>
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
+                <Link href="/discover?category=Gin" className="hover:text-[#d4af37] transition">
                   Artisanal Gins & Spirits
                 </Link>
               </li>
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
-                  Non-Alcoholic Aperitifs
+                <Link href="/discover?category=Champagne" className="hover:text-[#d4af37] transition">
+                  Prestige Champagnes
                 </Link>
               </li>
             </ul>
@@ -196,28 +196,28 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 font-light text-neutral-400">
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
+                <Link href="/cart" className="hover:text-[#d4af37] transition">
                   Track Climate Express
                 </Link>
               </li>
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
+                <Link href="/discover" className="hover:text-[#d4af37] transition">
                   Certificate of Authenticity
                 </Link>
               </li>
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
+                <Link href="/cart" className="hover:text-[#d4af37] transition">
                   Private Cellar Gifting
                 </Link>
               </li>
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
+                <Link href="/cart" className="hover:text-[#d4af37] transition">
                   Shipping & Return Terms
                 </Link>
               </li>
               <li>
-                <Link href="/#shop" className="hover:text-[#d4af37] transition">
-                  Contact Sommelier
+                <Link href="/discover" className="hover:text-[#d4af37] transition">
+                  Explore Master Vault
                 </Link>
               </li>
             </ul>
@@ -299,9 +299,13 @@ export function Footer() {
             <Link href="/#shop" className="hover:text-neutral-300 transition">
               Accessibility Statement
             </Link>
-            <Link href="/#shop" className="hover:text-neutral-300 transition">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("magnum:open-cookie-preferences"))}
+              className="hover:text-neutral-300 transition"
+            >
               Cookie Preferences
-            </Link>
+            </button>
           </div>
         </div>
 

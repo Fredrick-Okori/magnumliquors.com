@@ -223,7 +223,7 @@ export default function ProductDetailClient({
               ) : (
                 <img
                   src={product.image}
-                  alt={product.name}
+                  alt={`${product.name} ${product.volume || ""} - ${product.producer} (${product.origin}) | Buy Online Magnum Liquors Kampala`}
                   className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                 />
               )}
@@ -423,7 +423,7 @@ export default function ProductDetailClient({
                 </h2>
               </div>
               <Link
-                href="/#shop"
+                href="/discover"
                 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-900 hover:text-[#b8860b] transition"
               >
                 View Full Collection <ArrowUpRight size={16} />
@@ -465,7 +465,9 @@ export default function ProductDetailClient({
                     ) : (
                       <img
                         src={rel.image}
-                        alt={rel.name}
+                        alt={`${rel.name} - ${rel.producer} (${rel.origin}) | Magnum Liquors`}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     )}

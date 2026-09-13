@@ -95,6 +95,8 @@ export async function generateMetadata({
   };
 }
 
+import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/JsonLd";
+
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug || "");
@@ -106,9 +108,24 @@ export default async function ProductDetailPage({ params }: PageProps) {
   } catch (e) {}
 
   return (
-    <ProductDetailClient
-      initialSlug={decodedSlug}
-      initialProduct={initialProduct}
-    />
+    <>
+      {initialProduct && (
+        <>
+          <ProductJsonLd product={initialProduct} />
+          <BreadcrumbJsonLd
+            items={[
+              { name: "Home", url: "/" },
+              { name: "Discover", url: "/discover" },
+              { name: initialProduct.category || "Spirits", url: `/discover?category=${initialProduct.category}` },
+              { name: initialProduct.name, url: `/product/${decodedSlug}` },
+            ]}
+          />
+        </>
+      )}
+      <ProductDetailClient
+        initialSlug={decodedSlug}
+        initialProduct={initialProduct}
+      />
+    </>
   );
 }

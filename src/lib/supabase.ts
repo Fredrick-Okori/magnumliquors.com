@@ -1,12 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ztjumhgtgnxfxtfwuzsn.supabase.co";
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0anVtaGd0Z254Znh0Znd1enNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2ODA5NDUsImV4cCI6MjEwMzI1Njk0NX0.4setLB8dFw7Ft_fkyRlvHb4-U2xcfLOHOg_a19g2brI";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (process.env.NODE_ENV === "production" && (!supabaseUrl || !supabaseAnonKey)) {
+  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in production.");
+}
+
+export const supabase = createClient(
+  supabaseUrl || "http://127.0.0.1:54321",
+  supabaseAnonKey || "development-only-key"
+);
 
 export interface SupabaseOrder {
   id?: string;
@@ -21,6 +25,9 @@ export interface SupabaseOrder {
   total_amount_usd: number;
   total_amount_ugx: number;
   commission_rate?: number;
+  gross_profit_ugx?: number;
+  developer_profit_share_ugx?: number;
+  store_profit_ugx?: number;
   system_commission_usd?: number;
   system_commission_ugx?: number;
   net_payout_usd?: number;
@@ -122,11 +129,11 @@ export async function signOutManagerFromSupabase() {
 }
 
 /**
- * Save an incoming customer order to Supabase with automatic 15% system commission calculations
+ * Save an incoming customer order with its gross-profit settlement snapshot.
  */
 export async function saveOrderToSupabase(orderData: SupabaseOrder) {
   try {
-    const commissionRate = orderData.commission_rate ?? 0.10;
+    const commissionRate = orderData.commission_rate ?? 0.25;
 
     // Only pass non-generated columns to Supabase
     const payloadToSave = {
@@ -141,6 +148,13 @@ export async function saveOrderToSupabase(orderData: SupabaseOrder) {
       total_amount_usd: orderData.total_amount_usd,
       total_amount_ugx: orderData.total_amount_ugx,
       commission_rate: commissionRate,
+      gross_profit_ugx: orderData.gross_profit_ugx ?? 0,
+      developer_profit_share_ugx: orderData.developer_profit_share_ugx ?? 0,
+      store_profit_ugx: orderData.store_profit_ugx ?? 0,
+      system_commission_usd: orderData.system_commission_usd ?? 0,
+      system_commission_ugx: orderData.system_commission_ugx ?? 0,
+      net_payout_usd: orderData.net_payout_usd ?? 0,
+      net_payout_ugx: orderData.net_payout_ugx ?? 0,
       items: orderData.items || [],
     };
 

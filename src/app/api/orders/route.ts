@@ -49,11 +49,16 @@ export async function POST(request: Request) {
 
     const grossUSD = Number(body.totalAmountUSD || 0);
     const grossUGX = Number(body.totalAmountUGX || 0);
-    const commRate = Number(body.commissionRate || 0.10);
-    const sysCommUSD = body.systemCommissionUSD ?? Number((grossUSD * commRate).toFixed(2));
-    const sysCommUGX = body.systemCommissionUGX ?? Math.round(grossUGX * commRate);
-    const netPayoutUSD = body.netPayoutUSD ?? Number((grossUSD * (1 - commRate)).toFixed(2));
-    const netPayoutUGX = body.netPayoutUGX ?? Math.round(grossUGX * (1 - commRate));
+    const items = Array.isArray(body.items) ? body.items : [];
+    const grossProfitUGX = items.reduce(
+      (sum: number, item: { grossProfitUGX?: number }) => sum + Math.max(0, Number(item.grossProfitUGX || 0)),
+      0
+    );
+    const commRate = 0.25;
+    const sysCommUGX = Math.round(grossProfitUGX * commRate);
+    const sysCommUSD = Number((sysCommUGX / 3700).toFixed(2));
+    const netPayoutUGX = Math.max(0, grossProfitUGX - sysCommUGX);
+    const netPayoutUSD = Number((netPayoutUGX / 3700).toFixed(2));
 
     const saved = await saveOrderToSupabase({
       order_number: body.orderNumber || `MAG-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -67,20 +72,19 @@ export async function POST(request: Request) {
       total_amount_usd: grossUSD,
       total_amount_ugx: grossUGX,
       commission_rate: commRate,
+      gross_profit_ugx: grossProfitUGX,
+      developer_profit_share_ugx: sysCommUGX,
+      store_profit_ugx: netPayoutUGX,
       system_commission_usd: sysCommUSD,
       system_commission_ugx: sysCommUGX,
       net_payout_usd: netPayoutUSD,
       net_payout_ugx: netPayoutUGX,
-      items: body.items || [],
+      items,
     });
 
     if (saved.error) {
       console.warn("Order save notice:", saved.error);
-      return NextResponse.json({
-        success: false,
-        error: saved.error,
-        order: { id: `LOCAL-${Date.now()}`, ...body },
-      }, { status: 400 });
+      return NextResponse.json({ success: false, error: saved.error }, { status: 503 });
     }
 
     return NextResponse.json({ success: true, order: saved.data });

@@ -4,11 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ztjumhgtgnxfxtfwuzsn.supabase.co";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Create admin client if service role key is present
-const supabaseAdmin = serviceRoleKey
+const supabaseAdmin = serviceRoleKey && supabaseUrl
   ? createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,

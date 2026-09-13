@@ -271,7 +271,7 @@ export default function Home() {
                     ) : product.image.startsWith("data:") ? (
                       <img
                         src={product.image}
-                        alt={product.name}
+                        alt={`${product.name} - ${product.producer} (${product.origin}) | Magnum Liquors Kampala`}
                         loading={index < 3 ? "eager" : "lazy"}
                         decoding="async"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -279,7 +279,7 @@ export default function Home() {
                     ) : (
                       <Image
                         src={product.image}
-                        alt={product.name}
+                        alt={`${product.name} - ${product.producer} (${product.origin}) | Magnum Liquors Kampala`}
                         fill
                         priority={index < 3}
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

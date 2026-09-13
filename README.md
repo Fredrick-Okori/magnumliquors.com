@@ -1,4 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Magnum Liquors
+
+Next.js storefront and inventory dashboard for Magnum Liquors.
+
+## Local Development
+
+1. Copy `.env.example` to `.env.local`.
+2. Fill in the Supabase project URL and anon key. Add the service role key only when using team administration locally.
+3. Install dependencies and start the development server:
+
+```bash
+npm install
+npm run dev
+```
+
+## Production Checks
+
+Run these before deployment:
+
+```bash
+npm run lint
+npm run build
+```
+
+The production environment must define `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. `SUPABASE_SERVICE_ROLE_KEY` is server-only and must never be prefixed with `NEXT_PUBLIC_` or exposed to client code.
+
+Apply `supabase_schema.sql` to the target Supabase project before first deploy, including the `buying_price` product column and order item profit snapshots.
+
+## Deployment
+
+The app can run on Vercel or any Node.js host that supports Next.js:
+
+```bash
+npm run build
+npm run start
+```
+
+Configure the environment variables in the hosting provider rather than committing `.env` files. Review Supabase RLS policies and replace permissive policies with authenticated role policies before exposing administrative tables publicly.
 
 ## Getting Started
 
